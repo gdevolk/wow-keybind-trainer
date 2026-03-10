@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WoW Keybind Trainer</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Exo+2:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0b0d;
+    --bg2: #111318;
+    --bg3: #181c24;
+    --border: #2a3040;
+    --border-bright: #3d4a60;
+    --gold: #c8a84b;
+    --gold-dim: #7a6330;
+    --blue: #4a9eda;
+    --blue-dim: #1e4a6e;
+    --green: #4caf6e;
+    --red: #d94f4f;
+    --white: #e8edf5;
+    --yellow: #f0c040;
+    --mage: #68ccef;
+    --text: #c8d0dc;
+    --text-dim: #5a6478;
+    --cast-bar: #c8600a;
+    --cast-bar2: #e87830;
+    --hp-bar: #1e8c2a;
+    --hp-bar2: #28b838;
+    --mana-bar: #1a3ea8;
+    --mana-bar2: #2855d8;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Exo 2', sans-serif;
+    min-height: 100vh;
+    overflow: hidden;
+    position: relative;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 50% at 20% 80%, rgba(74,158,218,0.04) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 80% 20%, rgba(200,168,75,0.04) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .screen { display: none; width: 100vw; height: 100vh; }
+  .screen.active { display: flex; }
+
+  /* ── SETUP ── */
+  #setup {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    overflow-y: auto;
+    padding: 30px 0;
+  }
+
+  .logo { text-align: center; }
+  .logo h1 {
+    font-family: 'Cinzel', serif;
+    font-size: 2.2rem; font-weight: 700;
+    color: var(--gold); letter-spacing: 0.08em;
+    text-shadow: 0 0 40px rgba(200,168,75,0.4);
+  }
+  .logo p {
+    font-size: 0.82rem; color: var(--text-dim);
+    letter-spacing: 0.15em; text-transform: uppercase; margin-top: 6px;
+  }
+
+  .binds-container { display: flex; flex-direction: column; gap: 16px; width: 420px; }
+
+  .bind-section { display: flex; flex-direction: column; gap: 5px; }
+
+  .bind-section-title {
+    font-size: 0.68rem; font-weight: 600; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--text-dim);
+    padding: 0 4px 5px; border-bottom: 1px solid var(--border); margin-bottom: 2px;
+  }
+  .bind-section-title.kick-title   { color: #d98888; border-color: #d94f4f33; }
+  .bind-section-title.target-title { color: #b8c8d8; border-color: #e8edf522; }
+  .bind-section-title.focus-title  { color: #d4a840; border-color: #f0c04033; }
+
+  .bind-row {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 5px; padding: 10px 14px; transition: border-color 0.2s;
+  }
+  .bind-row:hover { border-color: var(--border-bright); }
+
+  .bind-class-icon {
+    width: 30px; height: 30px; border-radius: 3px;
+    border: 1px solid var(--mage);
+    background: linear-gradient(135deg, #0d2535, #1a4060);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; flex-shrink: 0;
+    box-shadow: 0 0 6px rgba(104,204,239,0.15);
+  }
+
+  .bind-label { flex: 1; font-size: 0.85rem; font-weight: 500; color: var(--text); }
+  .bind-label span { display: block; font-size: 0.68rem; color: var(--text-dim); margin-top: 1px; }
+
+  .bind-key {
+    width: 76px; height: 32px;
+    background: var(--bg2); border: 1px solid var(--border-bright);
+    border-radius: 4px; color: var(--gold);
+    font-family: 'Exo 2', sans-serif; font-size: 0.8rem; font-weight: 600;
+    text-align: center; cursor: pointer; letter-spacing: 0.05em;
+    transition: all 0.15s; outline: none; user-select: none;
+  }
+  .bind-key:hover { border-color: var(--gold-dim); background: #1a1e28; }
+  .bind-key.listening {
+    border-color: var(--gold); color: var(--gold);
+    background: rgba(200,168,75,0.08);
+    animation: pulse-gold 0.8s ease-in-out infinite;
+  }
+  .bind-key.bound { border-color: var(--blue-dim); color: var(--blue); }
+
+  @keyframes pulse-gold {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(200,168,75,0.4); }
+    50% { box-shadow: 0 0 0 5px rgba(200,168,75,0); }
+  }
+
+  .start-btn {
+    width: 420px; height: 46px;
+    background: linear-gradient(135deg, #7a4f10, #c8820a);
+    border: 1px solid var(--gold); border-radius: 6px;
+    color: #fff; font-family: 'Cinzel', serif;
+    font-size: 0.95rem; font-weight: 600; letter-spacing: 0.1em;
+    cursor: pointer; transition: all 0.2s;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+  }
+  .start-btn:hover {
+    background: linear-gradient(135deg, #9a6520, #e89820);
+    box-shadow: 0 0 20px rgba(200,168,75,0.3); transform: translateY(-1px);
+  }
+  .start-btn:disabled {
+    background: var(--bg3); border-color: var(--border);
+    color: var(--text-dim); cursor: not-allowed; transform: none; box-shadow: none;
+  }
+
+  .setup-hint { font-size: 0.72rem; color: var(--text-dim); text-align: center; letter-spacing: 0.05em; }
+
+  /* ── TRAINING ── */
+  #training { position: relative; align-items: center; justify-content: center; }
+
+  .arena-bg {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 100% 60% at 50% 100%, rgba(10,20,40,0.8) 0%, transparent 70%),
+      repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(255,255,255,0.01) 40px, rgba(255,255,255,0.01) 41px),
+      repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(255,255,255,0.01) 40px, rgba(255,255,255,0.01) 41px);
+  }
+
+  .pause-btn {
+    position: absolute; top: 20px; left: 20px;
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 5px; color: var(--text-dim);
+    font-family: 'Exo 2', sans-serif; font-size: 0.8rem;
+    padding: 8px 16px; cursor: pointer;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    transition: all 0.2s; z-index: 10;
+  }
+  .pause-btn:hover { border-color: var(--border-bright); color: var(--text); }
+
+  /* ── GLADIUS FRAMES ── */
+  .gladius-panel {
+    position: absolute; right: 40px; top: 50%;
+    transform: translateY(-50%);
+    display: flex; flex-direction: column; gap: 6px;
+  }
+
+  .enemy-frame {
+    width: 290px;
+    background: rgba(10,12,18,0.92);
+    border: 1px solid var(--border);
+    border-radius: 3px; padding: 6px;
+    position: relative; transition: border-color 0.1s;
+  }
+
+  .enemy-frame.casting    { border-color: var(--cast-bar); }
+  .enemy-frame.ev-target  { border-color: var(--white); }
+  .enemy-frame.ev-focus   { border-color: var(--yellow); }
+  .enemy-frame.ok-kick    { border-color: var(--green); }
+  .enemy-frame.ok-target  { border-color: var(--white); }
+  .enemy-frame.ok-focus   { border-color: var(--yellow); }
+  .enemy-frame.fail       { border-color: var(--red); }
+
+  .frame-top { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+
+  .class-icon {
+    width: 32px; height: 32px; border-radius: 2px;
+    border: 1px solid rgba(104,204,239,0.5);
+    background: linear-gradient(135deg, #0a1e30, #142840);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; flex-shrink: 0; position: relative;
+  }
+  .class-icon::after {
+    content: ''; position: absolute; inset: 0; border-radius: 2px;
+    box-shadow: inset 0 0 6px rgba(104,204,239,0.15);
+  }
+
+  .frame-info { flex: 1; min-width: 0; }
+
+  .enemy-name {
+    font-size: 0.78rem; font-weight: 600; color: var(--mage);
+    letter-spacing: 0.03em; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis;
+  }
+
+  .hp-bar-wrap {
+    margin-top: 3px; height: 10px; background: #0a0e14;
+    border-radius: 1px; overflow: hidden; border: 1px solid rgba(0,0,0,0.4);
+  }
+  .hp-bar-fill {
+    height: 100%; width: 100%;
+    background: linear-gradient(90deg, var(--hp-bar), var(--hp-bar2)); border-radius: 1px;
+  }
+
+  .mana-bar-wrap {
+    margin-top: 2px; height: 5px; background: #0a0e14;
+    border-radius: 1px; overflow: hidden; border: 1px solid rgba(0,0,0,0.4);
+  }
+  .mana-bar-fill {
+    height: 100%; width: 85%;
+    background: linear-gradient(90deg, var(--mana-bar), var(--mana-bar2)); border-radius: 1px;
+  }
+
+  .bind-indicator {
+    width: 32px; height: 32px; background: var(--bg2);
+    border: 1px solid var(--border); border-radius: 2px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.65rem; font-weight: 600; color: var(--text-dim); flex-shrink: 0;
+  }
+
+  /* cast bar */
+  .cast-bar-wrap {
+    height: 16px; background: #0a0e14; border-radius: 2px;
+    overflow: hidden; border: 1px solid rgba(0,0,0,0.6);
+    position: relative; margin-top: 4px;
+  }
+  .cast-bar-fill {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, var(--cast-bar), var(--cast-bar2));
+    border-radius: 2px; position: relative;
+  }
+  .cast-bar-fill::after {
+    content: ''; position: absolute; right: 0; top: 0; bottom: 0;
+    width: 3px; background: rgba(255,200,100,0.8); filter: blur(2px);
+  }
+  .cast-bar-label {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.65rem; font-weight: 600;
+    color: rgba(255,255,255,0.85); letter-spacing: 0.08em;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.8); pointer-events: none;
+  }
+
+  /* countdown circle row */
+  .countdown-wrap {
+    display: none; margin-top: 4px;
+    align-items: center; gap: 10px; height: 32px; padding: 0 4px;
+  }
+  .countdown-wrap.visible { display: flex; }
+
+  .countdown-svg { transform: rotate(-90deg); flex-shrink: 0; }
+  .countdown-bg  { fill: none; stroke: #1a2030; stroke-width: 3; }
+  .countdown-ring {
+    fill: none; stroke-width: 3; stroke-linecap: round;
+    stroke-dasharray: 75.4; stroke-dashoffset: 0; transition: none;
+  }
+  .countdown-ring.type-target { stroke: var(--white); }
+  .countdown-ring.type-focus  { stroke: var(--yellow); }
+
+  .countdown-label {
+    font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  }
+  .countdown-label.type-target { color: var(--white); }
+  .countdown-label.type-focus  { color: var(--yellow); }
+
+  /* feedback overlay */
+  .feedback {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Cinzel', serif; font-size: 0.88rem; font-weight: 700;
+    letter-spacing: 0.1em; opacity: 0; pointer-events: none;
+    border-radius: 3px; transition: opacity 0.1s;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+  }
+  .feedback.show { opacity: 1; }
+  .feedback.kicked-fb   { background: rgba(76,175,110,0.15);  color: var(--green); }
+  .feedback.targeted-fb { background: rgba(232,237,245,0.1);  color: var(--white); }
+  .feedback.focused-fb  { background: rgba(240,192,64,0.12);  color: var(--yellow); }
+  .feedback.miss-fb     { background: rgba(217,79,79,0.15);   color: var(--red); }
+  .feedback.wrong-fb    { background: rgba(217,79,79,0.15);   color: var(--red); }
+
+  /* center display */
+  .center-area { position: relative; z-index: 1; text-align: center; padding-right: 350px; }
+  .spell-display { opacity: 0; transition: opacity 0.3s; }
+  .spell-display.visible { opacity: 1; }
+  .spell-icon-big {
+    width: 64px; height: 64px; margin: 0 auto 12px; border-radius: 6px;
+    border: 2px solid var(--gold-dim);
+    background: linear-gradient(135deg, #1a1020, #2a1a40);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 32px; box-shadow: 0 0 20px rgba(200,168,75,0.2);
+  }
+  .spell-name { font-family: 'Cinzel', serif; font-size: 0.9rem; color: var(--gold); letter-spacing: 0.1em; }
+  .casting-who { font-size: 0.75rem; color: var(--text-dim); margin-top: 4px; letter-spacing: 0.05em; }
+
+  /* ── PAUSE ── */
+  #pause-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(5,7,12,0.88); z-index: 100;
+    align-items: center; justify-content: center;
+  }
+  #pause-overlay.active { display: flex; }
+
+  .pause-menu {
+    background: var(--bg3); border: 1px solid var(--border-bright);
+    border-radius: 8px; padding: 28px 38px;
+    min-width: 440px; max-height: 90vh; overflow-y: auto;
+    display: flex; flex-direction: column; align-items: center; gap: 18px;
+  }
+  .pause-title { font-family: 'Cinzel', serif; font-size: 1.3rem; color: var(--gold); letter-spacing: 0.1em; }
+  .pause-binds { width: 100%; display: flex; flex-direction: column; gap: 14px; }
+
+  .pause-section-title {
+    font-size: 0.68rem; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--text-dim); padding-bottom: 4px; border-bottom: 1px solid var(--border);
+    margin-bottom: 4px;
+  }
+  .pause-section-title.kick-title   { color: #d98888; border-color: #d94f4f33; }
+  .pause-section-title.target-title { color: #b8c8d8; border-color: #e8edf522; }
+  .pause-section-title.focus-title  { color: #d4a840; border-color: #f0c04033; }
+
+  .pause-bind-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 12px; background: var(--bg2);
+    border: 1px solid var(--border); border-radius: 4px; margin-top: 4px;
+  }
+
+  .pause-actions { display: flex; gap: 12px; width: 100%; }
+  .btn-resume {
+    flex: 1; height: 42px;
+    background: linear-gradient(135deg, #1a4a20, #2a7a30);
+    border: 1px solid #3a9a40; border-radius: 5px;
+    color: #7fdf8f; font-family: 'Cinzel', serif;
+    font-size: 0.85rem; letter-spacing: 0.08em; cursor: pointer; transition: all 0.2s;
+  }
+  .btn-resume:hover { background: linear-gradient(135deg,#2a6030,#3a9a40); box-shadow: 0 0 12px rgba(76,175,110,0.3); }
+  .btn-quit {
+    flex: 1; height: 42px; background: var(--bg2);
+    border: 1px solid var(--border); border-radius: 5px;
+    color: var(--text-dim); font-family: 'Cinzel', serif;
+    font-size: 0.85rem; letter-spacing: 0.08em; cursor: pointer; transition: all 0.2s;
+  }
+  .btn-quit:hover { border-color: var(--red); color: var(--red); }
+</style>
+</head>
+<body>
+
+<!-- ═══ SETUP ═══ -->
+<div id="setup" class="screen active">
+  <div class="logo">
+    <h1>KEYBIND TRAINER</h1>
+    <p>World of Warcraft · Arena PvP</p>
+  </div>
+
+  <div class="binds-container">
+    <div class="bind-section">
+      <div class="bind-section-title kick-title">⚔ Kick — interrupt cast</div>
+      <div class="bind-row">
+        <div class="bind-class-icon">🧙</div>
+        <div class="bind-label">Kick Enemy 1<span>Interrupt their spellcast</span></div>
+        <button class="bind-key setup-bind" data-group="kick" data-index="0">Click</button>
+      </div>
+      <div class="bind-row">
+        <div class="bind-class-icon">🧙</div>
+        <div class="bind-label">Kick Enemy 2<span>Interrupt their spellcast</span></div>
+        <button class="bind-key setup-bind" data-group="kick" data-index="1">Click</button>
+      </div>
+      <div class="bind-row">
+        <div class="bind-class-icon">🧙</div>
+        <div class="bind-label">Kick Enemy 3<span>Interrupt their spellcast</span></div>
+        <button class="bind-key setup-bind" data-group="kick" data-index="2">Click</button>
+      </div>
+    </div>
+
+    <div class="bind-section">
+      <div class="bind-section-title target-title">◎ Target enemy</div>
+      <div class="bind-row">
+        <div class="bind-class-icon">🧙</div>
+        <div class="bind-label">Target Enemy 1<span>Set as current target</span></div>
+        <button class="bind-key setup-bind" data-group="target" data-index="0">Click</button>
+      </div>
+      <div class="bind-row">
+        <div class="bind-class-icon">🧙</div>
+        <div class="bind-label">Target Enemy 2<span>Set as current target</span></div>
+        <button class="bind-key setup-bind" data-group="target" data-index="1">Click</button>
+      </div>
+      <div class="bind-row">
+        <div class="bind-class-icon">🧙</div>
+        <div class="bind-label">Target Enemy 3<span>Set as current target</span></div>
+        <button class="bind-key setup-bind" data-group="target" data-index="2">Click</button>
+      </div>
+    </div>
+
+    <div class="bind-section">
+      <div class="bind-section-title focus-title">◈ Focus enemy</div>
+      <div class="bind-row">
+        <div class="bind-class-icon">🧙</div>
+        <div class="bind-label">Focus Enemy 1<span>Set as focus target</span></div>
+        <button class="bind-key setup-bind" data-group="focus" data-index="0">Click</button>
+      </div>
+      <div class="bind-row">
+        <div class="bind-class-icon">🧙</div>
+        <div class="bind-label">Focus Enemy 2<span>Set as focus target</span></div>
+        <button class="bind-key setup-bind" data-group="focus" data-index="1">Click</button>
+      </div>
+      <div class="bind-row">
+        <div class="bind-class-icon">🧙</div>
+        <div class="bind-label">Focus Enemy 3<span>Set as focus target</span></div>
+        <button class="bind-key setup-bind" data-group="focus" data-index="2">Click</button>
+      </div>
+    </div>
+  </div>
+
+  <button class="start-btn" id="start-btn" disabled>BIND ALL KEYS TO START</button>
+  <p class="setup-hint">Click a key button, then press any key on your keyboard</p>
+</div>
+
+<!-- ═══ TRAINING ═══ -->
+<div id="training" class="screen">
+  <div class="arena-bg"></div>
+  <button class="pause-btn" id="pause-btn">⏸ PAUSE</button>
+
+  <div class="center-area">
+    <div class="spell-display" id="spell-display">
+      <div class="spell-icon-big" id="spell-icon">🐑</div>
+      <div class="spell-name" id="spell-name">POLYMORPH</div>
+      <div class="casting-who" id="casting-who"></div>
+    </div>
+  </div>
+
+  <div class="gladius-panel" id="gladius-panel"></div>
+</div>
+
+<!-- ═══ PAUSE OVERLAY ═══ -->
+<div id="pause-overlay">
+  <div class="pause-menu">
+    <div class="pause-title">PAUSED</div>
+    <div class="pause-binds" id="pause-binds"></div>
+    <div class="pause-actions">
+      <button class="btn-resume" id="btn-resume">▶ RESUME</button>
+      <button class="btn-quit" id="btn-quit">✕ QUIT</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const CAST_DURATION  = 1500;
+const EVENT_DURATION = 1500;
+const POST_DELAY     = 1000;
+const FB_DURATION    = 600;
+const CIRCUM         = 75.4; // 2 * π * 12
+
+const state = {
+  binds:       [null, null, null],
+  targetBinds: [null, null, null],
+  focusBinds:  [null, null, null],
+  listening:      null, // { group, index, btn }
+  pauseListening: null,
+  paused:      false,
+  activeEvent: null,   // { type: 'kick'|'target'|'focus', idx }
+  eventTimer:  null,
+  countdownRAF: null,
+  fbTimers:    [null, null, null],
+};
+
+// ── SETUP BINDS ──
+const startBtn = document.getElementById('start-btn');
+document.querySelectorAll('.setup-bind').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (state.listening) {
+      state.listening.btn.classList.remove('listening');
+      const prev = getBind(state.listening.group, state.listening.index);
+      state.listening.btn.textContent = prev ? formatKey(prev) : 'Click';
+    }
+    state.listening = { group: btn.dataset.group, index: +btn.dataset.index, btn };
+    btn.classList.add('listening');
+    btn.classList.remove('bound');
+    btn.textContent = '...';
+  });
+});
+
+document.addEventListener('keydown', e => {
+  if (state.listening) {
+    e.preventDefault();
+    const { group, index, btn } = state.listening;
+    setBind(group, index, e.code);
+    btn.textContent = formatKey(e.code);
+    btn.classList.remove('listening');
+    btn.classList.add('bound');
+    state.listening = null;
+    checkAllBound();
+    return;
+  }
+  if (state.pauseListening) {
+    e.preventDefault();
+    const { group, index, btn } = state.pauseListening;
+    setBind(group, index, e.code);
+    btn.textContent = formatKey(e.code);
+    btn.classList.remove('listening');
+    btn.classList.add('bound');
+    state.pauseListening = null;
+    syncSetupBtn(group, index);
+    return;
+  }
+  if (!state.paused && document.getElementById('training').classList.contains('active')) {
+    handleKey(e.code);
+  }
+});
+
+function getBind(group, i) {
+  return group === 'kick' ? state.binds[i]
+       : group === 'target' ? state.targetBinds[i]
+       : state.focusBinds[i];
+}
+function setBind(group, i, code) {
+  if (group === 'kick')   state.binds[i] = code;
+  else if (group === 'target') state.targetBinds[i] = code;
+  else state.focusBinds[i] = code;
+}
+function syncSetupBtn(group, i) {
+  const btn = document.querySelector(`.setup-bind[data-group="${group}"][data-index="${i}"]`);
+  if (!btn) return;
+  const val = getBind(group, i);
+  btn.textContent = val ? formatKey(val) : 'Click';
+  btn.classList.toggle('bound', !!val);
+}
+function checkAllBound() {
+  const ok = state.binds.every(b=>b) && state.targetBinds.every(b=>b) && state.focusBinds.every(b=>b);
+  startBtn.disabled = !ok;
+  startBtn.textContent = ok ? 'START TRAINING' : 'BIND ALL KEYS TO START';
+}
+function formatKey(code) {
+  if (!code) return '?';
+  return code
+    .replace('Key','').replace('Digit','').replace('Numpad','NP')
+    .replace('ArrowUp','↑').replace('ArrowDown','↓')
+    .replace('ArrowLeft','←').replace('ArrowRight','→')
+    .replace('Space','SPC')
+    .replace('ShiftLeft','L-SHF').replace('ShiftRight','R-SHF')
+    .replace('ControlLeft','L-CTL').replace('ControlRight','R-CTL')
+    .replace('AltLeft','L-ALT').replace('AltRight','R-ALT');
+}
+
+// ── START ──
+startBtn.addEventListener('click', () => {
+  if (startBtn.disabled) return;
+  showScreen('training');
+  buildFrames();
+  scheduleNext(500);
+});
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ── GLADIUS FRAMES ──
+function buildFrames() {
+  const panel = document.getElementById('gladius-panel');
+  panel.innerHTML = '';
+  for (let i = 0; i < 3; i++) {
+    panel.innerHTML += `
+      <div class="enemy-frame" id="frame-${i}">
+        <div class="frame-top">
+          <div class="class-icon">🧙</div>
+          <div class="frame-info">
+            <div class="enemy-name">Enemy ${i+1}</div>
+            <div class="hp-bar-wrap"><div class="hp-bar-fill"></div></div>
+            <div class="mana-bar-wrap"><div class="mana-bar-fill"></div></div>
+          </div>
+          <div class="bind-indicator" id="bind-ind-${i}">${formatKey(state.binds[i])}</div>
+        </div>
+        <div class="cast-bar-wrap" id="castbar-wrap-${i}" style="display:none;">
+          <div class="cast-bar-fill" id="castbar-${i}"></div>
+          <div class="cast-bar-label">Polymorph</div>
+        </div>
+        <div class="countdown-wrap" id="cd-wrap-${i}">
+          <svg class="countdown-svg" width="28" height="28" viewBox="0 0 28 28">
+            <circle class="countdown-bg" cx="14" cy="14" r="12"/>
+            <circle class="countdown-ring" id="cd-ring-${i}" cx="14" cy="14" r="12"/>
+          </svg>
+          <span class="countdown-label" id="cd-label-${i}"></span>
+        </div>
+        <div class="feedback" id="feedback-${i}"></div>
+      </div>
+    `;
+  }
+}
+
+// ── GAME ──
+function scheduleNext(delay) {
+  clearTimeout(state.eventTimer);
+  state.eventTimer = setTimeout(() => { if (!state.paused) startEvent(); }, delay);
+}
+
+function startEvent() {
+  const idx  = Math.floor(Math.random() * 3);
+  const type = ['kick','target','focus'][Math.floor(Math.random() * 3)];
+  state.activeEvent = { type, idx };
+
+  const frame = document.getElementById('frame-' + idx);
+
+  if (type === 'kick') {
+    const wrap   = document.getElementById('castbar-wrap-' + idx);
+    const bar    = document.getElementById('castbar-' + idx);
+    frame.classList.add('casting');
+    wrap.style.display = 'block';
+    bar.style.transition = 'none';
+    bar.style.width = '0%';
+    setCenterDisplay('🐑', 'POLYMORPH', `Enemy ${idx+1} is casting...`);
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      bar.style.transition = `width ${CAST_DURATION}ms linear`;
+      bar.style.width = '100%';
+    }));
+    state.eventTimer = setTimeout(() => {
+      if (state.activeEvent?.type === 'kick' && state.activeEvent.idx === idx) miss(idx, 'kick');
+    }, CAST_DURATION);
+
+  } else {
+    frame.classList.add('ev-' + type);
+    const ring  = document.getElementById('cd-ring-' + idx);
+    const label = document.getElementById('cd-label-' + idx);
+    const wrap  = document.getElementById('cd-wrap-' + idx);
+    ring.className  = `countdown-ring type-${type}`;
+    label.className = `countdown-label type-${type}`;
+    label.textContent = type === 'target' ? 'TARGET!' : 'FOCUS!';
+    ring.style.strokeDashoffset = '0';
+    wrap.classList.add('visible');
+    setCenterDisplay(type === 'target' ? '◎' : '◈',
+      type === 'target' ? 'TARGET ENEMY' : 'FOCUS ENEMY',
+      `Enemy ${idx+1}`);
+    animateRing(ring, performance.now(), EVENT_DURATION, 0);
+    state.eventTimer = setTimeout(() => {
+      if (state.activeEvent?.type === type && state.activeEvent.idx === idx) miss(idx, type);
+    }, EVENT_DURATION);
+  }
+}
+
+function animateRing(ring, start, duration, fromOffset) {
+  function tick(now) {
+    const elapsed = now - start;
+    const progress = Math.min(elapsed / duration, 1);
+    ring.style.strokeDashoffset = (fromOffset + (CIRCUM - fromOffset) * progress).toString();
+    if (progress < 1) state.countdownRAF = requestAnimationFrame(tick);
+  }
+  state.countdownRAF = requestAnimationFrame(tick);
+}
+
+function handleKey(code) {
+  if (!state.activeEvent) return;
+  const { type, idx } = state.activeEvent;
+
+  const ki = state.binds.indexOf(code);
+  const ti = state.targetBinds.indexOf(code);
+  const fi = state.focusBinds.indexOf(code);
+
+  const pressedSomething = ki !== -1 || ti !== -1 || fi !== -1;
+  if (!pressedSomething) return;
+
+  if (type === 'kick'   && ki === idx) { success(idx, 'kick');   return; }
+  if (type === 'target' && ti === idx) { success(idx, 'target'); return; }
+  if (type === 'focus'  && fi === idx) { success(idx, 'focus');  return; }
+
+  // wrong key pressed — show wrong on whichever frame was pressed
+  const wrongIdx = ki !== -1 ? ki : ti !== -1 ? ti : fi;
+  wrong(wrongIdx);
+}
+
+function success(idx, type) {
+  clearTimeout(state.eventTimer);
+  cancelAnimationFrame(state.countdownRAF);
+  state.activeEvent = null;
+  hideCenterDisplay();
+  clearCastBar(idx);
+  clearCountdown(idx);
+
+  const frame = document.getElementById('frame-' + idx);
+  frame.className = `enemy-frame ok-${type}`;
+  const fbClass = type === 'kick' ? 'kicked-fb' : type === 'target' ? 'targeted-fb' : 'focused-fb';
+  const fbText  = type === 'kick' ? '✓ KICKED!' : type === 'target' ? '✓ TARGETED!' : '✓ FOCUSED!';
+  showFeedback(idx, fbClass, fbText);
+  setTimeout(() => { frame.className = 'enemy-frame'; scheduleNext(POST_DELAY); }, FB_DURATION);
+}
+
+function miss(idx, type) {
+  cancelAnimationFrame(state.countdownRAF);
+  state.activeEvent = null;
+  hideCenterDisplay();
+  clearCastBar(idx);
+  clearCountdown(idx);
+
+  const frame = document.getElementById('frame-' + idx);
+  frame.className = 'enemy-frame fail';
+  showFeedback(idx, 'miss-fb', '✗ MISS');
+  setTimeout(() => { frame.className = 'enemy-frame'; scheduleNext(POST_DELAY); }, FB_DURATION);
+}
+
+function wrong(idx) {
+  const frame = document.getElementById('frame-' + idx);
+  frame.classList.add('fail');
+  showFeedback(idx, 'wrong-fb', '✗ WRONG');
+  setTimeout(() => { frame.classList.remove('fail'); clearFeedback(idx); }, FB_DURATION);
+}
+
+function clearCastBar(idx) {
+  const bar  = document.getElementById('castbar-' + idx);
+  const wrap = document.getElementById('castbar-wrap-' + idx);
+  if (!bar) return;
+  bar.style.transition = 'none';
+  bar.style.width = '0%';
+  setTimeout(() => { if (wrap) wrap.style.display = 'none'; }, 150);
+}
+
+function clearCountdown(idx) {
+  const wrap  = document.getElementById('cd-wrap-' + idx);
+  const frame = document.getElementById('frame-' + idx);
+  if (wrap)  wrap.classList.remove('visible');
+  if (frame) { frame.classList.remove('ev-target'); frame.classList.remove('ev-focus'); }
+}
+
+function setCenterDisplay(icon, name, who) {
+  document.getElementById('spell-icon').textContent = icon;
+  document.getElementById('spell-name').textContent = name;
+  document.getElementById('casting-who').textContent = who;
+  document.getElementById('spell-display').classList.add('visible');
+}
+function hideCenterDisplay() {
+  document.getElementById('spell-display').classList.remove('visible');
+}
+
+function showFeedback(idx, cls, text) {
+  clearFeedback(idx);
+  const el = document.getElementById('feedback-' + idx);
+  el.className = `feedback show ${cls}`;
+  el.textContent = text;
+  state.fbTimers[idx] = setTimeout(() => clearFeedback(idx), FB_DURATION + 200);
+}
+function clearFeedback(idx) {
+  clearTimeout(state.fbTimers[idx]);
+  const el = document.getElementById('feedback-' + idx);
+  if (el) el.className = 'feedback';
+}
+
+// ── PAUSE ──
+document.getElementById('pause-btn').addEventListener('click', openPause);
+document.getElementById('btn-resume').addEventListener('click', closePause);
+document.getElementById('btn-quit').addEventListener('click', () => {
+  closePause();
+  clearTimeout(state.eventTimer);
+  cancelAnimationFrame(state.countdownRAF);
+  state.activeEvent = null;
+  showScreen('setup');
+});
+
+function openPause() {
+  state.paused = true;
+  clearTimeout(state.eventTimer);
+  cancelAnimationFrame(state.countdownRAF);
+  if (state.activeEvent?.type === 'kick') {
+    const bar = document.getElementById('castbar-' + state.activeEvent.idx);
+    if (bar) { const w = getComputedStyle(bar).width; bar.style.transition = 'none'; bar.style.width = w; }
+  }
+  buildPauseBinds();
+  document.getElementById('pause-overlay').classList.add('active');
+}
+
+function closePause() {
+  state.paused = false;
+  document.getElementById('pause-overlay').classList.remove('active');
+  for (let i = 0; i < 3; i++) {
+    const ind = document.getElementById('bind-ind-' + i);
+    if (ind) ind.textContent = formatKey(state.binds[i]);
+  }
+  if (!state.activeEvent) { scheduleNext(POST_DELAY); return; }
+  if (state.activeEvent.type === 'kick') resumeCastBar();
+  else resumeCountdown();
+}
+
+function resumeCastBar() {
+  const { idx } = state.activeEvent;
+  const bar  = document.getElementById('castbar-' + idx);
+  const wrap = document.getElementById('castbar-wrap-' + idx);
+  if (!bar) return;
+  const w = parseFloat(bar.style.width) || 0;
+  const remaining = CAST_DURATION * (1 - w / 100);
+  wrap.style.display = 'block';
+  requestAnimationFrame(() => {
+    bar.style.transition = `width ${remaining}ms linear`;
+    bar.style.width = '100%';
+  });
+  state.eventTimer = setTimeout(() => {
+    if (state.activeEvent?.type === 'kick' && state.activeEvent.idx === idx) miss(idx, 'kick');
+  }, remaining);
+}
+
+function resumeCountdown() {
+  const { type, idx } = state.activeEvent;
+  const ring = document.getElementById('cd-ring-' + idx);
+  if (!ring) return;
+  const currentOffset = parseFloat(ring.style.strokeDashoffset) || 0;
+  const remaining = EVENT_DURATION * (1 - currentOffset / CIRCUM);
+  animateRing(ring, performance.now(), remaining, currentOffset);
+  state.eventTimer = setTimeout(() => {
+    if (state.activeEvent?.type === type && state.activeEvent.idx === idx) miss(idx, type);
+  }, remaining);
+}
+
+// ── PAUSE BINDS ──
+const SECTIONS = [
+  { group: 'kick',   label: '⚔ Kick',         cls: 'kick-title' },
+  { group: 'target', label: '◎ Target enemy',  cls: 'target-title' },
+  { group: 'focus',  label: '◈ Focus enemy',   cls: 'focus-title' },
+];
+
+function buildPauseBinds() {
+  const container = document.getElementById('pause-binds');
+  container.innerHTML = '';
+  SECTIONS.forEach(({ group, label, cls }) => {
+    const sec = document.createElement('div');
+    sec.innerHTML = `<div class="pause-section-title ${cls}">${label}</div>`;
+    for (let i = 0; i < 3; i++) {
+      const val = getBind(group, i);
+      sec.innerHTML += `
+        <div class="pause-bind-row">
+          <div style="width:24px;height:24px;font-size:13px;border-radius:3px;border:1px solid rgba(104,204,239,0.4);background:linear-gradient(135deg,#0d2535,#1a4060);display:flex;align-items:center;justify-content:center;flex-shrink:0;">🧙</div>
+          <div style="flex:1;font-size:0.8rem;color:var(--text);margin-left:8px;">Enemy ${i+1}</div>
+          <button class="bind-key pause-bind-key ${val?'bound':''}" data-group="${group}" data-index="${i}" style="width:66px;height:28px;font-size:0.75rem;">${val ? formatKey(val) : 'Click'}</button>
+        </div>
+      `;
+    }
+    container.appendChild(sec);
+  });
+
+  container.querySelectorAll('.pause-bind-key').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (state.pauseListening) {
+        state.pauseListening.btn.classList.remove('listening');
+        const pv = getBind(state.pauseListening.group, state.pauseListening.index);
+        state.pauseListening.btn.textContent = pv ? formatKey(pv) : 'Click';
+      }
+      state.pauseListening = { group: btn.dataset.group, index: +btn.dataset.index, btn };
+      btn.classList.add('listening');
+      btn.textContent = '...';
+    });
+  });
+}
+</script>
+</body>
+</html>
