@@ -803,18 +803,20 @@ function startCast() {
 
   frame.classList.add('casting');
   castbarWrap.style.display = 'block';
-  castbar.style.width = '0%';
   castbar.style.transition = 'none';
+  castbar.style.width = '0%';
 
   // show center spell display
   const spellDisplay = document.getElementById('spell-display');
   spellDisplay.classList.add('visible');
   document.getElementById('casting-who').textContent = `Enemy ${idx+1} is casting...`;
 
-  // animate cast bar
+  // double rAF: first frame resets width, second starts animation
   requestAnimationFrame(() => {
-    castbar.style.transition = `width ${CAST_DURATION}ms linear`;
-    castbar.style.width = '100%';
+    requestAnimationFrame(() => {
+      castbar.style.transition = `width ${CAST_DURATION}ms linear`;
+      castbar.style.width = '100%';
+    });
   });
 
   // set miss timer
