@@ -120,11 +120,29 @@
   }
   .pause-btn:hover { border-color:var(--border-bright); color:var(--text); }
 
+  #event-filters { position:absolute; top:20px; right:20px; display:flex; gap:14px; z-index:10; }
+  .filter-check { display:flex; align-items:center; gap:6px; cursor:pointer; font-family:'Exo 2',sans-serif; font-size:0.8rem; color:var(--text-dim); letter-spacing:0.06em; text-transform:uppercase; user-select:none; }
+  .filter-check input { accent-color:var(--gold); width:14px; height:14px; cursor:pointer; }
+  .filter-check:hover span { color:var(--text); }
+
   /* ── GLADIUS ── */
-  .gladius-panel { position:absolute; right:210px; top:50%; transform:translateY(-50%); display:flex; flex-direction:column; gap:6px; }
+  .gladius-panel {
+    position:absolute; right:210px; top:50%; transform:translateY(-50%);
+    display:flex; flex-direction:column; gap:6px;
+    cursor:grab; user-select:none; z-index:5;
+    min-width:200px; transform-origin: top left;
+  }
+  .gladius-panel:active { cursor:grabbing; }
+  .panel-resize-handle {
+    position:absolute; bottom:-8px; right:-8px; width:16px; height:16px;
+    cursor:se-resize; z-index:6;
+    background:linear-gradient(135deg,transparent 50%,rgba(104,204,239,0.5) 50%);
+    border-radius:0 0 3px 0;
+  }
   .enemy-frame {
-    width:435px; background:rgba(10,12,18,0.92);
+    background:rgba(10,12,18,0.92);
     border:1px solid var(--border); border-radius:3px; padding:6px; position:relative; transition:border-color 0.1s;
+    box-sizing:border-box;
   }
   .enemy-frame.casting    { border-color:var(--cast-bar); }
   .enemy-frame.ev-target  { border-color:var(--white); }
@@ -235,6 +253,11 @@
 <div id="training" class="screen">
   <div class="arena-bg"></div>
   <button class="pause-btn" id="pause-btn">⏸ PAUSE</button>
+  <div id="event-filters">
+    <label class="filter-check"><input type="checkbox" id="chk-kick" checked> <span>Kick</span></label>
+    <label class="filter-check"><input type="checkbox" id="chk-target" checked> <span>Target</span></label>
+    <label class="filter-check"><input type="checkbox" id="chk-focus" checked> <span>Focus</span></label>
+  </div>
   <div class="center-area">
     <div class="spell-display" id="spell-display">
       <div class="spell-icon-big" id="spell-icon">🐑</div>
@@ -454,6 +477,82 @@ function buildFrames() {
     ring.setAttribute('stroke-dashoffset', '0');
     svg.appendChild(ring);
   }
+
+  // Add resize handle to panel
+  let rh = panel.querySelector('.panel-resize-handle');
+  if (!rh) { rh = document.createElement('div'); rh.className = 'panel-resize-handle'; panel.appendChild(rh); }
+
+  // Restore saved position/width
+  const saved = localStorage.getItem('gladius-panel');
+  if (saved) {
+    const { left, top, scale } = JSON.parse(saved);
+    panel.style.left      = left + 'px';
+    panel.style.top       = top  + 'px';
+    panel.style.right     = 'auto';
+    const s = scale || 1;
+    panel.dataset.scale   = s;
+    panel.style.transform = `scale(${s})`;
+  }
+
+  makePanelDraggable(panel);
+  makePanelResizable(panel, rh);
+}
+
+function savePanel(panel) {
+  localStorage.setItem('gladius-panel', JSON.stringify({
+    left:  panel.offsetLeft,
+    top:   panel.offsetTop,
+    scale: parseFloat(panel.dataset.scale) || 1,
+  }));
+}
+
+function makePanelDraggable(panel) {
+  let ox, oy, dragging = false;
+  panel.addEventListener('mousedown', e => {
+    if (e.target.classList.contains('panel-resize-handle')) return;
+    if (e.target.closest('button')) return;
+    dragging = true;
+    ox = e.clientX - panel.offsetLeft;
+    oy = e.clientY - panel.offsetTop;
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    panel.style.left = (e.clientX - ox) + 'px';
+    panel.style.top  = (e.clientY - oy) + 'px';
+  });
+  document.addEventListener('mouseup', () => {
+    if (dragging) { dragging = false; savePanel(panel); }
+  });
+}
+
+function makePanelResizable(panel, handle) {
+  let startScale, startLeft, startTop, baseW, baseH, startMouseX, startMouseY;
+  handle.addEventListener('mousedown', e => {
+    e.preventDefault(); e.stopPropagation();
+    startScale  = parseFloat(panel.dataset.scale) || 1;
+    startLeft   = panel.offsetLeft;
+    startTop    = panel.offsetTop;
+    baseW       = panel.offsetWidth;
+    baseH       = panel.offsetHeight;
+    startMouseX = e.clientX;
+    startMouseY = e.clientY;
+    function onMove(e) {
+      const dx = e.clientX - startMouseX;
+      const dy = e.clientY - startMouseY;
+      const delta = (dx + dy) / 400;
+      const newScale = Math.max(0.3, Math.min(3, startScale + delta));
+      panel.dataset.scale = newScale;
+      panel.style.transform = `scale(${newScale})`;
+    }
+    function onUp() {
+      savePanel(panel);
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    }
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  });
 }
 
 // ── GAME ──
@@ -464,7 +563,10 @@ function scheduleNext(delay) {
 
 function startEvent() {
   const idx  = Math.floor(Math.random() * 3);
-  const type = ['kick','target','focus'][Math.floor(Math.random() * 3)];
+  const all = ['kick','target','focus'];
+  const enabled = all.filter(t => document.getElementById('chk-' + t).checked);
+  if (enabled.length === 0) { scheduleNext(1000); return; }
+  const type = enabled[Math.floor(Math.random() * enabled.length)];
   state.activeEvent = { type, idx };
   const frame = document.getElementById('frame-' + idx);
 
@@ -687,6 +789,7 @@ const PAUSE_ICONS = {
 };
 
 function buildPauseBinds() {
+  const container = document.getElementById('pause-binds');
   container.innerHTML = '';
   SECTIONS.forEach(({ group, label, cls }) => {
     const sec = document.createElement('div');
