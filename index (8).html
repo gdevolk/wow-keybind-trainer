@@ -65,6 +65,7 @@
     width:28px; height:28px; border-radius:3px; border:1px solid var(--mage);
     background:linear-gradient(135deg,#0d2535,#1a4060);
     display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0;
+    overflow:hidden;
   }
   .bind-label { flex:1; font-size:0.83rem; font-weight:500; color:var(--text); }
   .bind-label span { display:block; font-size:0.67rem; color:var(--text-dim); margin-top:1px; }
@@ -139,6 +140,7 @@
     border:1px solid rgba(104,204,239,0.5);
     background:linear-gradient(135deg,#0a1e30,#142840);
     display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; position:relative;
+    overflow:hidden;
   }
   .class-icon::after { content:''; position:absolute; inset:0; border-radius:2px; box-shadow:inset 0 0 6px rgba(104,204,239,0.15); }
   .frame-info { flex:1; min-width:0; }
@@ -208,21 +210,21 @@
   <div class="binds-container">
     <div class="bind-section">
       <div class="bind-section-title kick-title">⚔ Kick — interrupt cast</div>
-      <div class="bind-row"><div class="bind-class-icon">🧙</div><div class="bind-label">Kick Enemy 1<span>Interrupt spellcast</span></div><button class="bind-key setup-bind" data-group="kick" data-index="0">Click</button></div>
-      <div class="bind-row"><div class="bind-class-icon">🧙</div><div class="bind-label">Kick Enemy 2<span>Interrupt spellcast</span></div><button class="bind-key setup-bind" data-group="kick" data-index="1">Click</button></div>
-      <div class="bind-row"><div class="bind-class-icon">🧙</div><div class="bind-label">Kick Enemy 3<span>Interrupt spellcast</span></div><button class="bind-key setup-bind" data-group="kick" data-index="2">Click</button></div>
+      <div class="bind-row"><div class="bind-class-icon"><img src="https://wow.zamimg.com/images/wow/icons/medium/classicon_mage.jpg" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;"></div><div class="bind-label">Kick Enemy 1<span>Interrupt spellcast</span></div><button class="bind-key setup-bind" data-group="kick" data-index="0">Click</button></div>
+      <div class="bind-row"><div class="bind-class-icon"><img src="https://wow.zamimg.com/images/wow/icons/medium/classicon_mage.jpg" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;"></div><div class="bind-label">Kick Enemy 2<span>Interrupt spellcast</span></div><button class="bind-key setup-bind" data-group="kick" data-index="1">Click</button></div>
+      <div class="bind-row"><div class="bind-class-icon"><img src="https://wow.zamimg.com/images/wow/icons/medium/classicon_mage.jpg" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;"></div><div class="bind-label">Kick Enemy 3<span>Interrupt spellcast</span></div><button class="bind-key setup-bind" data-group="kick" data-index="2">Click</button></div>
     </div>
     <div class="bind-section">
       <div class="bind-section-title target-title">◎ Target enemy</div>
-      <div class="bind-row"><div class="bind-class-icon">🧙</div><div class="bind-label">Target Enemy 1<span>Set as current target</span></div><button class="bind-key setup-bind" data-group="target" data-index="0">Click</button></div>
-      <div class="bind-row"><div class="bind-class-icon">🧙</div><div class="bind-label">Target Enemy 2<span>Set as current target</span></div><button class="bind-key setup-bind" data-group="target" data-index="1">Click</button></div>
-      <div class="bind-row"><div class="bind-class-icon">🧙</div><div class="bind-label">Target Enemy 3<span>Set as current target</span></div><button class="bind-key setup-bind" data-group="target" data-index="2">Click</button></div>
+      <div class="bind-row"><div class="bind-class-icon"><img src="https://wow.zamimg.com/images/wow/icons/medium/classicon_mage.jpg" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;"></div><div class="bind-label">Target Enemy 1<span>Set as current target</span></div><button class="bind-key setup-bind" data-group="target" data-index="0">Click</button></div>
+      <div class="bind-row"><div class="bind-class-icon"><img src="https://wow.zamimg.com/images/wow/icons/medium/classicon_mage.jpg" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;"></div><div class="bind-label">Target Enemy 2<span>Set as current target</span></div><button class="bind-key setup-bind" data-group="target" data-index="1">Click</button></div>
+      <div class="bind-row"><div class="bind-class-icon"><img src="https://wow.zamimg.com/images/wow/icons/medium/classicon_mage.jpg" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;"></div><div class="bind-label">Target Enemy 3<span>Set as current target</span></div><button class="bind-key setup-bind" data-group="target" data-index="2">Click</button></div>
     </div>
     <div class="bind-section">
       <div class="bind-section-title focus-title">◈ Focus enemy</div>
-      <div class="bind-row"><div class="bind-class-icon">🧙</div><div class="bind-label">Focus Enemy 1<span>Set as focus target</span></div><button class="bind-key setup-bind" data-group="focus" data-index="0">Click</button></div>
-      <div class="bind-row"><div class="bind-class-icon">🧙</div><div class="bind-label">Focus Enemy 2<span>Set as focus target</span></div><button class="bind-key setup-bind" data-group="focus" data-index="1">Click</button></div>
-      <div class="bind-row"><div class="bind-class-icon">🧙</div><div class="bind-label">Focus Enemy 3<span>Set as focus target</span></div><button class="bind-key setup-bind" data-group="focus" data-index="2">Click</button></div>
+      <div class="bind-row"><div class="bind-class-icon"><img src="https://wow.zamimg.com/images/wow/icons/medium/classicon_mage.jpg" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;"></div><div class="bind-label">Focus Enemy 1<span>Set as focus target</span></div><button class="bind-key setup-bind" data-group="focus" data-index="0">Click</button></div>
+      <div class="bind-row"><div class="bind-class-icon"><img src="https://wow.zamimg.com/images/wow/icons/medium/classicon_mage.jpg" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;"></div><div class="bind-label">Focus Enemy 2<span>Set as focus target</span></div><button class="bind-key setup-bind" data-group="focus" data-index="1">Click</button></div>
+      <div class="bind-row"><div class="bind-class-icon"><img src="https://wow.zamimg.com/images/wow/icons/medium/classicon_mage.jpg" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;"></div><div class="bind-label">Focus Enemy 3<span>Set as focus target</span></div><button class="bind-key setup-bind" data-group="focus" data-index="2">Click</button></div>
     </div>
   </div>
   <button class="start-btn" id="start-btn" disabled>BIND ALL KEYS TO START</button>
@@ -416,7 +418,7 @@ function buildFrames() {
     div.id = 'frame-' + i;
     div.innerHTML = `
       <div class="frame-top">
-        <div class="class-icon">🧙</div>
+        <div class="class-icon"><img src="https://wow.zamimg.com/images/wow/icons/medium/classicon_mage.jpg" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;"></div>
         <div class="frame-info">
           <div class="enemy-name">Enemy ${i+1}</div>
           <div class="hp-bar-wrap"><div class="hp-bar-fill"></div></div>
@@ -688,7 +690,7 @@ function buildPauseBinds() {
       const val = getBind(group, i);
       sec.innerHTML += `
         <div class="pause-bind-row">
-          <div style="width:24px;height:24px;font-size:13px;border-radius:3px;border:1px solid rgba(104,204,239,0.4);background:linear-gradient(135deg,#0d2535,#1a4060);display:flex;align-items:center;justify-content:center;flex-shrink:0;">🧙</div>
+          <div style="width:24px;height:24px;font-size:13px;border-radius:3px;border:1px solid rgba(104,204,239,0.4);background:linear-gradient(135deg,#0d2535,#1a4060);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;"><img src="https://wow.zamimg.com/images/wow/icons/medium/classicon_mage.jpg" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;"></div>
           <div style="flex:1;font-size:0.8rem;color:var(--text);margin-left:8px;">Enemy ${i+1}</div>
           <button class="bind-key pause-bind-key ${val?'bound':''}" data-group="${group}" data-index="${i}" style="min-width:90px;height:28px;font-size:0.72rem;">${val ? formatBind(val) : 'Click'}</button>
         </div>
