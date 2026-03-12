@@ -198,15 +198,10 @@
   .center-area { position:absolute; left:0; right:0; top:0; bottom:0; z-index:1; display:flex; align-items:center; justify-content:center; text-align:center; }
   .spell-display { opacity:0; transition:opacity 0.3s; }
   .spell-display.visible { opacity:1; }
-  .spell-icon-big { width:64px; height:64px; margin:0 auto 12px; border-radius:6px; border:2px solid var(--gold-dim); background:linear-gradient(135deg,#1a1020,#2a1a40); display:flex; align-items:center; justify-content:center; font-size:32px; box-shadow:0 0 20px rgba(200,168,75,0.2); }
+  .spell-icon-big { width:64px; height:64px; margin:0 auto 12px; border-radius:6px; border:2px solid var(--gold-dim); background:linear-gradient(135deg,#1a1020,#2a1a40); display:flex; align-items:center; justify-content:center; font-size:32px; box-shadow:0 0 20px rgba(200,168,75,0.2); transition:border-color 0.05s, box-shadow 0.05s, opacity 0.35s; }
   .spell-name { font-family:'Cinzel',serif; font-size:0.9rem; color:var(--gold); letter-spacing:0.1em; }
   .casting-who { font-size:0.75rem; color:var(--text-dim); margin-top:4px; letter-spacing:0.05em; }
 
-  .center-result { position:fixed; left:0; right:0; top:50%; transform:translateY(0px); text-align:center; font-family:'Cinzel',serif; font-size:2.4rem; font-weight:700; letter-spacing:0.12em; opacity:0; transition:opacity 0.15s,transform 0.15s; pointer-events:none; text-shadow:0 2px 16px rgba(0,0,0,0.8); }
-  .center-result.show { opacity:1; transform:translateY(-8px); }
-  .center-result.res-success { color:var(--green); }
-  .center-result.res-miss    { color:var(--red); }
-  .center-result.res-wrong   { color:var(--red); }
 
   /* ── PAUSE ── */
   #pause-overlay { display:none; position:fixed; inset:0; background:rgba(5,7,12,0.88); z-index:100; align-items:center; justify-content:center; }
@@ -224,6 +219,30 @@
   .btn-resume:hover { background:linear-gradient(135deg,#2a6030,#3a9a40); box-shadow:0 0 12px rgba(76,175,110,0.3); }
   .btn-quit { flex:1; height:42px; background:var(--bg2); border:1px solid var(--border); border-radius:5px; color:var(--text-dim); font-family:'Cinzel',serif; font-size:0.85rem; letter-spacing:0.08em; cursor:pointer; transition:all 0.2s; }
   .btn-quit:hover { border-color:var(--red); color:var(--red); }
+
+  /* ── LIVE STATS HUD ── */
+  #live-stats {
+    position:absolute; bottom:18px; left:50%; transform:translateX(-50%);
+    display:flex; gap:18px; align-items:center;
+    background:rgba(8,10,16,0.75); border:1px solid var(--border);
+    border-radius:6px; padding:6px 16px; pointer-events:none;
+  }
+  .ls-item { display:flex; flex-direction:column; align-items:center; gap:1px; }
+  .ls-val { font-family:'Cinzel',serif; font-size:1rem; font-weight:700; color:var(--text); line-height:1; }
+  .ls-val.good { color:var(--green); }
+  .ls-val.bad  { color:var(--red); }
+  .ls-label { font-size:0.55rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-dim); }
+  .ls-sep { width:1px; height:28px; background:var(--border); }
+
+  /* ── PAUSE STATS ── */
+  .pause-stats { width:100%; display:flex; flex-direction:column; gap:6px; }
+  .ps-title { font-size:0.65rem; font-weight:600; letter-spacing:0.16em; text-transform:uppercase; color:var(--text-dim); border-bottom:1px solid var(--border); padding-bottom:4px; margin-bottom:2px; }
+  .ps-row { display:flex; justify-content:space-between; align-items:center; padding:5px 10px; background:var(--bg2); border-radius:3px; }
+  .ps-key { font-size:0.72rem; color:var(--text-dim); letter-spacing:0.05em; }
+  .ps-val { font-family:'Cinzel',serif; font-size:0.85rem; font-weight:700; color:var(--text); }
+  .ps-val.good { color:var(--green); }
+  .ps-val.bad  { color:var(--red); }
+  .ps-pb { font-size:0.6rem; color:var(--gold); letter-spacing:0.08em; margin-left:6px; }
 </style>
 </head>
 <body>
@@ -281,13 +300,23 @@
     </div>
   </div>
   <div class="gladius-panel" id="gladius-panel"></div>
-  <div class="center-result" id="center-result"></div>
-</div>
+  <div id="live-stats">
+    <div class="ls-item"><span class="ls-val" id="ls-acc">—</span><span class="ls-label">Accuracy</span></div>
+    <div class="ls-sep"></div>
+    <div class="ls-item"><span class="ls-val" id="ls-rt">—</span><span class="ls-label">Avg RT</span></div>
+    <div class="ls-sep"></div>
+    <div class="ls-item"><span class="ls-val" id="ls-hits">0</span><span class="ls-label">Hits</span></div>
+    <div class="ls-sep"></div>
+    <div class="ls-item"><span class="ls-val bad" id="ls-miss">0</span><span class="ls-label">Misses</span></div>
+    <div class="ls-sep"></div>
+    <div class="ls-item"><span class="ls-val bad" id="ls-wrong">0</span><span class="ls-label">Misclicks</span></div>
+  </div>
 
 <!-- PAUSE -->
 <div id="pause-overlay">
   <div class="pause-menu">
     <div class="pause-title">PAUSED</div>
+    <div class="pause-stats" id="pause-stats"></div>
     <div class="pause-binds" id="pause-binds"></div>
     <div class="pause-actions">
       <button class="btn-resume" id="btn-resume">▶ RESUME</button>
@@ -351,8 +380,8 @@ const state = {
   focusBinds:   [...PRESETS.focus],
   kickTarget:   PRESETS.kickTarget[0],
   kickFocus:    PRESETS.kickFocus[0],
-  arenaTarget:  null,  // current target index (0-2) or null
-  arenaFocus:   null,  // current focus index (0-2) or null
+  arenaTarget:  null,
+  arenaFocus:   null,
   arenaMode:    false,
   listening:      null,
   pauseListening: null,
@@ -361,6 +390,7 @@ const state = {
   eventTimer:  null,
   countdownRAF: null,
   fbTimers:    [null, null, null],
+  stats: { hits:0, misses:0, wrongs:0, rtSum:0, rtCount:0, eventStart:0 },
 };
 
 // ── SETUP ──
@@ -453,6 +483,8 @@ startBtn.addEventListener('click', () => {
   if (startBtn.disabled) return;
   showScreen('training');
   buildFrames();
+  state.stats = { hits:0, misses:0, wrongs:0, rtSum:0, rtCount:0, eventStart:0 };
+  updateLiveStats();
   scheduleNext(500);
 });
 
@@ -643,6 +675,7 @@ function startEvent() {
   if (enabled.length === 0) { scheduleNext(1000); return; }
   const type = enabled[Math.floor(Math.random() * enabled.length)];
   state.activeEvent = { type, idx };
+  state.stats.eventStart = performance.now();
   const frame = document.getElementById('frame-' + idx);
 
   if (type === 'kick') {
@@ -737,8 +770,11 @@ function handleKey(e) {
 function success(idx, type) {
   clearTimeout(state.eventTimer);
   cancelAnimationFrame(state.countdownRAF);
+  const rt = performance.now() - state.stats.eventStart;
+  state.stats.hits++;
+  state.stats.rtSum += rt;
+  state.stats.rtCount++;
   state.activeEvent = null;
-  hideCenterDisplay();
   if (type !== 'kick') clearCastBar(idx);
   clearCountdown(idx);
   const frame = document.getElementById('frame-' + idx);
@@ -747,7 +783,6 @@ function success(idx, type) {
   if (state.arenaFocus  === idx) arenaClasses.push('arena-focus');
   frame.className = `enemy-frame ok-${type}`;
   if (type === 'kick') {
-    // Flash the cast bar green instead of overlay feedback
     const bar  = document.getElementById('castbar-' + idx);
     const wrap = document.getElementById('castbar-wrap-' + idx);
     if (bar && wrap) {
@@ -757,6 +792,7 @@ function success(idx, type) {
       bar.style.boxShadow = '0 0 8px rgba(76,175,110,0.6)';
       wrap.style.visibility = 'visible';
       wrap.style.opacity = '1';
+      flashSpellIcon(true);
       setTimeout(() => {
         wrap.style.transition = 'opacity 0.35s';
         wrap.style.opacity = '0';
@@ -774,9 +810,19 @@ function success(idx, type) {
   } else {
     const fbClass = type === 'target' ? 'targeted-fb' : 'focused-fb';
     const fbText  = type === 'target' ? '✓ TARGETED!' : '✓ FOCUSED!';
-    showFeedback(idx, fbClass, fbText);
+    const fbEl = document.getElementById('feedback-' + idx);
+    clearTimeout(state.fbTimers[idx]);
+    fbEl.style.transition = ''; fbEl.style.opacity = '';
+    fbEl.className = `feedback show ${fbClass}`; fbEl.textContent = fbText;
+    flashSpellIcon(true);
+    setTimeout(() => {
+      fbEl.style.transition = 'opacity 0.35s'; fbEl.style.opacity = '0';
+      setTimeout(() => {
+        fbEl.className = 'feedback'; fbEl.style.transition = ''; fbEl.style.opacity = '';
+      }, 360);
+    }, 200);
   }
-  showCenterResult('res-success', '✓');
+  updateLiveStats();
   setTimeout(() => {
     frame.className = 'enemy-frame ' + arenaClasses.join(' ');
     scheduleNext(POST_DELAY);
@@ -785,8 +831,8 @@ function success(idx, type) {
 
 function miss(idx, type) {
   cancelAnimationFrame(state.countdownRAF);
+  state.stats.misses++;
   state.activeEvent = null;
-  hideCenterDisplay();
   clearCountdown(idx);
   const frame = document.getElementById('frame-' + idx);
   const arenaClasses = [];
@@ -803,6 +849,7 @@ function miss(idx, type) {
       bar.style.boxShadow = '0 0 8px rgba(217,79,79,0.6)';
       wrap.style.visibility = 'visible';
       wrap.style.opacity = '1';
+      flashSpellIcon(false);
       setTimeout(() => {
         wrap.style.transition = 'opacity 0.35s';
         wrap.style.opacity = '0';
@@ -819,9 +866,19 @@ function miss(idx, type) {
     }
   } else {
     clearCastBar(idx);
-    showFeedback(idx, 'miss-fb', '✗ MISS');
+    const fbEl = document.getElementById('feedback-' + idx);
+    clearTimeout(state.fbTimers[idx]);
+    fbEl.style.transition = ''; fbEl.style.opacity = '';
+    fbEl.className = 'feedback show miss-fb'; fbEl.textContent = '✗ MISS';
+    flashSpellIcon(false);
+    setTimeout(() => {
+      fbEl.style.transition = 'opacity 0.35s'; fbEl.style.opacity = '0';
+      setTimeout(() => {
+        fbEl.className = 'feedback'; fbEl.style.transition = ''; fbEl.style.opacity = '';
+      }, 360);
+    }, 200);
   }
-  showCenterResult('res-miss', '✗');
+  updateLiveStats();
   setTimeout(() => {
     frame.className = 'enemy-frame ' + arenaClasses.join(' ');
     scheduleNext(POST_DELAY);
@@ -829,9 +886,11 @@ function miss(idx, type) {
 }
 
 function wrong(idx) {
+  state.stats.wrongs++;
   const frame = document.getElementById('frame-' + idx);
   frame.classList.add('fail');
-  showCenterResult('res-wrong', '✗');
+  flashSpellIcon(false, true);
+  updateLiveStats();
   setTimeout(() => { frame.classList.remove('fail'); }, FB_DURATION);
 }
 
@@ -851,22 +910,69 @@ function clearCountdown(idx) {
 }
 
 function setCenterDisplay(icon, name, who) {
-  document.getElementById('spell-icon').textContent = icon;
+  clearTimeout(flashTimer);
+  const iconEl = document.getElementById('spell-icon');
+  const displayEl = document.getElementById('spell-display');
+  displayEl.style.transition = '';
+  displayEl.style.opacity = '';
+  iconEl.style.transition = 'none';
+  iconEl.style.opacity = '';
+  iconEl.style.borderColor = '';
+  iconEl.style.boxShadow = '';
+  iconEl.textContent = icon;
   document.getElementById('spell-name').textContent = name;
   document.getElementById('casting-who').textContent = who;
   document.getElementById('spell-display').classList.add('visible');
 }
 function hideCenterDisplay() { document.getElementById('spell-display').classList.remove('visible'); }
 
-let crTimer = null;
-function showCenterResult(cls, text) {
-  clearTimeout(crTimer);
-  const el = document.getElementById('center-result');
-  el.className = `center-result ${cls}`;
-  void el.offsetWidth;
-  el.classList.add('show');
-  el.textContent = text;
-  crTimer = setTimeout(() => el.classList.remove('show'), 700);
+let flashTimer = null;
+function flashSpellIcon(success, borderOnly = false) {
+  const icon    = document.getElementById('spell-icon');
+  const display = document.getElementById('spell-display');
+  clearTimeout(flashTimer);
+  if (success) {
+    icon.style.transition = 'none';
+    icon.style.borderColor = '#4caf6e';
+    icon.style.boxShadow = '0 0 16px rgba(76,175,110,0.6)';
+    flashTimer = setTimeout(() => {
+      display.style.transition = 'opacity 0.35s';
+      display.style.opacity = '0';
+      flashTimer = setTimeout(() => {
+        display.classList.remove('visible');
+        display.style.transition = '';
+        display.style.opacity = '';
+        icon.style.borderColor = '';
+        icon.style.boxShadow = '';
+      }, 360);
+    }, 200);
+  } else if (borderOnly) {
+    icon.style.transition = 'none';
+    icon.style.borderColor = '#c0392b';
+    icon.style.boxShadow = '0 0 16px rgba(192,57,43,0.6)';
+    flashTimer = setTimeout(() => {
+      icon.style.transition = 'border-color 0.4s, box-shadow 0.4s';
+      icon.style.borderColor = '';
+      icon.style.boxShadow = '';
+      flashTimer = setTimeout(() => { icon.style.transition = ''; }, 400);
+    }, 300);
+  } else {
+    icon.style.transition = 'none';
+    icon.style.borderColor = '#c0392b';
+    icon.style.boxShadow = '0 0 16px rgba(192,57,43,0.6)';
+    flashTimer = setTimeout(() => {
+      display.style.transition = 'opacity 0.35s';
+      display.style.opacity = '0';
+      flashTimer = setTimeout(() => {
+        display.classList.remove('visible');
+        display.style.transition = '';
+        display.style.opacity = '';
+        icon.style.borderColor = '';
+        icon.style.boxShadow = '';
+        icon.style.transition = '';
+      }, 360);
+    }, 300);
+  }
 }
 
 function showFeedback(idx, cls, text) {
@@ -896,6 +1002,51 @@ document.getElementById('btn-quit').addEventListener('click', () => {
   showScreen('setup');
 });
 
+function calcStats() {
+  const s = state.stats;
+  const total = s.hits + s.misses;
+  const acc = total > 0 ? Math.round(s.hits / total * 100) : null;
+  const avgRt = s.rtCount > 0 ? Math.round(s.rtSum / s.rtCount) : null;
+  return { acc, avgRt, hits: s.hits, total, misses: s.misses, wrongs: s.wrongs };
+}
+
+function updateLiveStats() {
+  const { acc, avgRt, hits, total, misses, wrongs } = calcStats();
+  const accEl = document.getElementById('ls-acc');
+  accEl.textContent = acc !== null ? acc + '%' : '—';
+  accEl.className = 'ls-val' + (acc === null ? '' : acc >= 80 ? ' good' : acc < 60 ? ' bad' : '');
+  const rtEl = document.getElementById('ls-rt');
+  rtEl.textContent = avgRt !== null ? avgRt + 'ms' : '—';
+  rtEl.className = 'ls-val' + (avgRt === null ? '' : avgRt < 500 ? ' good' : avgRt > 900 ? ' bad' : '');
+  document.getElementById('ls-hits').textContent = hits + (total > 0 ? '/' + total : '');
+  document.getElementById('ls-miss').textContent = misses;
+  document.getElementById('ls-wrong').textContent = wrongs;
+}
+
+function renderPauseStats() {
+  const { acc, avgRt, hits, total, misses, wrongs } = calcStats();
+  const pb = JSON.parse(localStorage.getItem('wow-kt-pb') || '{}');
+  // Update PB
+  let pbUpdated = false;
+  if (acc !== null && (pb.acc === undefined || acc > pb.acc)) { pb.acc = acc; pbUpdated = true; }
+  if (avgRt !== null && (pb.rt === undefined || avgRt < pb.rt)) { pb.rt = avgRt; pbUpdated = true; }
+  if (pbUpdated) localStorage.setItem('wow-kt-pb', JSON.stringify(pb));
+
+  const accColor = acc === null ? '' : acc >= 80 ? ' good' : acc < 60 ? ' bad' : '';
+  const rtColor  = avgRt === null ? '' : avgRt < 500 ? ' good' : avgRt > 900 ? ' bad' : '';
+  const pbAccBadge = pb.acc !== undefined ? `<span class="ps-pb">PB ${pb.acc}%</span>` : '';
+  const pbRtBadge  = pb.rt  !== undefined ? `<span class="ps-pb">PB ${pb.rt}ms</span>` : '';
+
+  document.getElementById('pause-stats').innerHTML = `
+    <div class="ps-title">Session Stats</div>
+    <div class="ps-row"><span class="ps-key">Accuracy</span><span><span class="ps-val${accColor}">${acc !== null ? acc + '%' : '—'}</span>${pbAccBadge}</span></div>
+    <div class="ps-row"><span class="ps-key">Avg Reaction Time</span><span><span class="ps-val${rtColor}">${avgRt !== null ? avgRt + 'ms' : '—'}</span>${pbRtBadge}</span></div>
+    <div class="ps-row"><span class="ps-key">Hits / Total</span><span class="ps-val">${hits} / ${total}</span></div>
+    <div class="ps-row"><span class="ps-key">Misses (timeout)</span><span class="ps-val${misses > 0 ? ' bad' : ''}">${misses}</span></div>
+    <div class="ps-row"><span class="ps-key">Misclicks (wrong key)</span><span class="ps-val${wrongs > 0 ? ' bad' : ''}">${wrongs}</span></div>
+  `;
+}
+
 function openPause() {
   state.paused = true;
   clearTimeout(state.eventTimer); cancelAnimationFrame(state.countdownRAF);
@@ -904,6 +1055,7 @@ function openPause() {
     if (bar) { const w = getComputedStyle(bar).width; bar.style.transition = 'none'; bar.style.width = w; }
   }
   buildPauseBinds();
+  renderPauseStats();
   document.getElementById('pause-overlay').classList.add('active');
 }
 
