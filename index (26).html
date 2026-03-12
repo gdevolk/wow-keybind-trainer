@@ -120,7 +120,11 @@
   }
   .pause-btn:hover { border-color:var(--border-bright); color:var(--text); }
 
-  #event-filters { position:absolute; top:20px; right:20px; display:flex; gap:14px; z-index:10; }
+  #event-filters { position:absolute; top:20px; right:20px; display:flex; align-items:center; gap:14px; z-index:10; }
+  #mode-switcher { display:flex; gap:0; border:1px solid var(--border-bright); border-radius:4px; overflow:hidden; }
+  .mode-btn { background:var(--bg3); border:none; color:var(--text-dim); font-family:'Exo 2',sans-serif; font-size:0.72rem; letter-spacing:0.08em; text-transform:uppercase; padding:6px 12px; cursor:pointer; transition:all 0.15s; }
+  .mode-btn.active { background:var(--gold-dim); color:var(--gold); }
+  .mode-btn:hover:not(.active) { color:var(--text); }
   .filter-check { display:flex; align-items:center; gap:6px; cursor:pointer; font-family:'Exo 2',sans-serif; font-size:0.8rem; color:var(--text-dim); letter-spacing:0.06em; text-transform:uppercase; user-select:none; }
   .filter-check input { accent-color:var(--gold); width:14px; height:14px; cursor:pointer; }
   .filter-check:hover span { color:var(--text); }
@@ -144,7 +148,8 @@
     border:1px solid var(--border); border-radius:3px; padding:6px; position:relative; transition:border-color 0.1s;
     box-sizing:border-box;
   }
-  .enemy-frame.casting    { border-color:var(--cast-bar); }
+  .enemy-frame.arena-target { box-shadow: 0 0 0 2px #e8edf5; }
+  .enemy-frame.arena-focus  { box-shadow: 0 0 0 2px #f0c040; }
   .enemy-frame.ev-target  { border-color:var(--white); }
   .enemy-frame.ev-focus   { border-color:var(--yellow); }
   .enemy-frame.ok-kick    { border-color:var(--green); }
@@ -244,6 +249,11 @@
       <div class="bind-row"><div class="bind-class-icon"><svg viewBox="0 0 24 24" width="100%" height="100%"><polygon points="12,2 22,12 12,22 2,12" stroke="#c8a951" stroke-width="1.5" fill="none"/><polygon points="12,6 18,12 12,18 6,12" fill="#c8a951" opacity="0.5"/></svg></div><div class="bind-label">Focus Enemy 2<span>Set as focus target</span></div><button class="bind-key setup-bind" data-group="focus" data-index="1">Click</button></div>
       <div class="bind-row"><div class="bind-class-icon"><svg viewBox="0 0 24 24" width="100%" height="100%"><polygon points="12,2 22,12 12,22 2,12" stroke="#c8a951" stroke-width="1.5" fill="none"/><polygon points="12,6 18,12 12,18 6,12" fill="#c8a951" opacity="0.5"/></svg></div><div class="bind-label">Focus Enemy 3<span>Set as focus target</span></div><button class="bind-key setup-bind" data-group="focus" data-index="2">Click</button></div>
     </div>
+    <div class="bind-section">
+      <div class="bind-section-title kick-title">⚔ Arena — Kick current target / focus</div>
+      <div class="bind-row"><div class="bind-class-icon"><img src="https://wow.zamimg.com/images/wow/icons/medium/ability_kick.jpg" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;"></div><div class="bind-label">Kick Target<span>Kick your current target</span></div><button class="bind-key setup-bind" data-group="kickTarget" data-index="0">Click</button></div>
+      <div class="bind-row"><div class="bind-class-icon"><img src="https://wow.zamimg.com/images/wow/icons/medium/ability_kick.jpg" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;"></div><div class="bind-label">Kick Focus<span>Kick your focus target</span></div><button class="bind-key setup-bind" data-group="kickFocus" data-index="0">Click</button></div>
+    </div>
   </div>
   <button class="start-btn" id="start-btn" disabled>BIND ALL KEYS TO START</button>
   <p class="setup-hint">Click a key button, then press any key (with optional Shift / Ctrl / Alt)</p>
@@ -254,9 +264,13 @@
   <div class="arena-bg"></div>
   <button class="pause-btn" id="pause-btn">⏸ PAUSE</button>
   <div id="event-filters">
-    <label class="filter-check"><input type="checkbox" id="chk-kick" checked> <span>Kick</span></label>
-    <label class="filter-check"><input type="checkbox" id="chk-target" checked> <span>Target</span></label>
-    <label class="filter-check"><input type="checkbox" id="chk-focus" checked> <span>Focus</span></label>
+    <div id="mode-switcher">
+      <button class="mode-btn active" id="btn-drill">KEYBIND DRILL</button>
+      <button class="mode-btn" id="btn-arena">ARENA MODE</button>
+    </div>
+    <label class="filter-check" id="chk-kick-wrap"><input type="checkbox" id="chk-kick" checked> <span>Kick</span></label>
+    <label class="filter-check" id="chk-target-wrap"><input type="checkbox" id="chk-target" checked> <span>Target</span></label>
+    <label class="filter-check" id="chk-focus-wrap"><input type="checkbox" id="chk-focus" checked> <span>Focus</span></label>
   </div>
   <div class="center-area">
     <div class="spell-display" id="spell-display">
@@ -323,15 +337,22 @@ function matchKey(e, bind) {
 
 // ── PRESETS ──
 const PRESETS = {
-  kick:   ['ArrowRight', 'Insert', 'ArrowLeft'],
-  target: ['End', 'ArrowDown', 'PageDown'],
-  focus:  ['Shift+End', 'Shift+ArrowDown', 'Shift+PageDown'],
+  kick:        ['ArrowRight', 'Insert', 'ArrowLeft'],
+  target:      ['End', 'ArrowDown', 'PageDown'],
+  focus:       ['Shift+End', 'Shift+ArrowDown', 'Shift+PageDown'],
+  kickTarget:  ['KeyF'],
+  kickFocus:   ['Shift+KeyF'],
 };
 
 const state = {
-  binds:       [...PRESETS.kick],
-  targetBinds: [...PRESETS.target],
-  focusBinds:  [...PRESETS.focus],
+  binds:        [...PRESETS.kick],
+  targetBinds:  [...PRESETS.target],
+  focusBinds:   [...PRESETS.focus],
+  kickTarget:   PRESETS.kickTarget[0],
+  kickFocus:    PRESETS.kickFocus[0],
+  arenaTarget:  null,  // current target index (0-2) or null
+  arenaFocus:   null,  // current focus index (0-2) or null
+  arenaMode:    false,
   listening:      null,
   pauseListening: null,
   paused:      false,
@@ -345,12 +366,18 @@ const state = {
 const startBtn = document.getElementById('start-btn');
 
 function getBind(group, i) {
-  return group === 'kick' ? state.binds[i] : group === 'target' ? state.targetBinds[i] : state.focusBinds[i];
+  if (group === 'kick')       return state.binds[i];
+  if (group === 'target')     return state.targetBinds[i];
+  if (group === 'focus')      return state.focusBinds[i];
+  if (group === 'kickTarget') return state.kickTarget;
+  if (group === 'kickFocus')  return state.kickFocus;
 }
 function setBind(group, i, code) {
   if (group === 'kick')        state.binds[i] = code;
   else if (group === 'target') state.targetBinds[i] = code;
-  else                         state.focusBinds[i] = code;
+  else if (group === 'focus')  state.focusBinds[i] = code;
+  else if (group === 'kickTarget') state.kickTarget = code;
+  else if (group === 'kickFocus')  state.kickFocus  = code;
 }
 
 function applyBind(group, i, code, btn) {
@@ -370,7 +397,9 @@ function syncSetupBtn(group, i) {
 }
 
 function checkAllBound() {
-  const ok = state.binds.every(b=>b) && state.targetBinds.every(b=>b) && state.focusBinds.every(b=>b);
+  const drillOk = state.binds.every(b=>b) && state.targetBinds.every(b=>b) && state.focusBinds.every(b=>b);
+  const arenaOk = state.kickTarget && state.kickFocus;
+  const ok = drillOk && arenaOk;
   startBtn.disabled = !ok;
   startBtn.textContent = ok ? 'START TRAINING' : 'BIND ALL KEYS TO START';
 }
@@ -555,6 +584,46 @@ function makePanelResizable(panel, handle) {
   });
 }
 
+// ── MODE SWITCHER ──
+document.getElementById('btn-drill').addEventListener('click', () => setMode(false));
+document.getElementById('btn-arena').addEventListener('click', () => setMode(true));
+
+function setMode(arena) {
+  state.arenaMode = arena;
+  document.getElementById('btn-drill').classList.toggle('active', !arena);
+  document.getElementById('btn-arena').classList.toggle('active', arena);
+  // Show/hide checkboxes
+  document.getElementById('chk-target-wrap').style.display = arena ? 'none' : '';
+  document.getElementById('chk-focus-wrap').style.display  = arena ? 'none' : '';
+  const kickChk = document.getElementById('chk-kick');
+  kickChk.disabled = arena;
+  if (arena) kickChk.checked = true;
+  // Reset arena state
+  state.arenaTarget = null;
+  state.arenaFocus  = null;
+  updateArenaFrames();
+  // Restart event cycle
+  clearTimeout(state.eventTimer);
+  cancelAnimationFrame(state.countdownRAF);
+  if (state.activeEvent) {
+    clearCastBar(state.activeEvent.idx);
+    clearCountdown(state.activeEvent.idx);
+    hideCenterDisplay();
+    state.activeEvent = null;
+  }
+  scheduleNext(500);
+}
+
+function updateArenaFrames() {
+  for (let i = 0; i < 3; i++) {
+    const frame = document.getElementById('frame-' + i);
+    if (!frame) continue;
+    frame.classList.remove('arena-target', 'arena-focus');
+    if (state.arenaTarget === i) frame.classList.add('arena-target');
+    if (state.arenaFocus  === i) frame.classList.add('arena-focus');
+  }
+}
+
 // ── GAME ──
 function scheduleNext(delay) {
   clearTimeout(state.eventTimer);
@@ -564,7 +633,9 @@ function scheduleNext(delay) {
 function startEvent() {
   const idx  = Math.floor(Math.random() * 3);
   const all = ['kick','target','focus'];
-  const enabled = all.filter(t => document.getElementById('chk-' + t).checked);
+  const enabled = state.arenaMode
+    ? ['kick']
+    : all.filter(t => document.getElementById('chk-' + t).checked);
   if (enabled.length === 0) { scheduleNext(1000); return; }
   const type = enabled[Math.floor(Math.random() * enabled.length)];
   state.activeEvent = { type, idx };
@@ -617,19 +688,44 @@ function startRingLoop(ring, duration, fromOffset) {
 }
 
 function handleKey(e) {
-  if (!state.activeEvent) return;
-  const { type, idx } = state.activeEvent;
-
   const ki = state.binds.findIndex(b => matchKey(e, b));
   const ti = state.targetBinds.findIndex(b => matchKey(e, b));
   const fi = state.focusBinds.findIndex(b => matchKey(e, b));
+  const isKickTarget = matchKey(e, state.kickTarget);
+  const isKickFocus  = matchKey(e, state.kickFocus);
 
+  // Arena mode: target/focus are free actions — mutually exclusive
+  if (state.arenaMode) {
+    if (ti !== -1) { state.arenaTarget = ti; updateArenaFrames(); return; }
+    if (fi !== -1 && ti === -1) { state.arenaFocus = fi; updateArenaFrames(); return; }
+  }
+
+  if (!state.activeEvent) return;
+  const { type, idx } = state.activeEvent;
+
+  if (state.arenaMode) {
+    // Direct kick 1/2/3
+    if (ki === idx) { success(idx, 'kick'); return; }
+    // Kick target
+    if (isKickTarget) {
+      if (state.arenaTarget === idx) { success(idx, 'kick'); return; }
+      else { wrong(state.arenaTarget ?? idx); return; }
+    }
+    // Kick focus
+    if (isKickFocus) {
+      if (state.arenaFocus === idx) { success(idx, 'kick'); return; }
+      else { wrong(state.arenaFocus ?? idx); return; }
+    }
+    // Wrong direct kick
+    if (ki !== -1) { wrong(ki); return; }
+    return;
+  }
+
+  // Keybind drill mode
   if (ki === -1 && ti === -1 && fi === -1) return;
-
   if (type === 'kick'   && ki === idx) { success(idx, 'kick');   return; }
   if (type === 'target' && ti === idx) { success(idx, 'target'); return; }
   if (type === 'focus'  && fi === idx) { success(idx, 'focus');  return; }
-
   const wrongIdx = ki !== -1 ? ki : ti !== -1 ? ti : fi;
   wrong(wrongIdx);
 }
@@ -642,12 +738,18 @@ function success(idx, type) {
   clearCastBar(idx);
   clearCountdown(idx);
   const frame = document.getElementById('frame-' + idx);
+  const arenaClasses = [];
+  if (state.arenaTarget === idx) arenaClasses.push('arena-target');
+  if (state.arenaFocus  === idx) arenaClasses.push('arena-focus');
   frame.className = `enemy-frame ok-${type}`;
   const fbClass = type === 'kick' ? 'kicked-fb' : type === 'target' ? 'targeted-fb' : 'focused-fb';
   const fbText  = type === 'kick' ? '✓ KICKED!' : type === 'target' ? '✓ TARGETED!' : '✓ FOCUSED!';
   showFeedback(idx, fbClass, fbText);
   showCenterResult('res-success', fbText);
-  setTimeout(() => { frame.className = 'enemy-frame'; scheduleNext(POST_DELAY); }, FB_DURATION);
+  setTimeout(() => {
+    frame.className = 'enemy-frame ' + arenaClasses.join(' ');
+    scheduleNext(POST_DELAY);
+  }, FB_DURATION);
 }
 
 function miss(idx, type) {
@@ -657,10 +759,16 @@ function miss(idx, type) {
   clearCastBar(idx);
   clearCountdown(idx);
   const frame = document.getElementById('frame-' + idx);
+  const arenaClasses = [];
+  if (state.arenaTarget === idx) arenaClasses.push('arena-target');
+  if (state.arenaFocus  === idx) arenaClasses.push('arena-focus');
   frame.className = 'enemy-frame fail';
   showFeedback(idx, 'miss-fb', '✗ MISS');
   showCenterResult('res-miss', '✗ MISS');
-  setTimeout(() => { frame.className = 'enemy-frame'; scheduleNext(POST_DELAY); }, FB_DURATION);
+  setTimeout(() => {
+    frame.className = 'enemy-frame ' + arenaClasses.join(' ');
+    scheduleNext(POST_DELAY);
+  }, FB_DURATION);
 }
 
 function wrong(idx) {
@@ -723,7 +831,8 @@ document.getElementById('btn-resume').addEventListener('click', closePause);
 document.getElementById('btn-quit').addEventListener('click', () => {
   closePause();
   clearTimeout(state.eventTimer); cancelAnimationFrame(state.countdownRAF);
-  state.activeEvent = null; showScreen('setup');
+  state.activeEvent = null; state.arenaTarget = null; state.arenaFocus = null;
+  showScreen('setup');
 });
 
 function openPause() {
