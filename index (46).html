@@ -11,7 +11,7 @@
     --border: #2a3040; --border-bright: #3d4a60;
     --gold: #c8a84b; --gold-dim: #7a6330;
     --blue: #4a9eda; --blue-dim: #1e4a6e;
-    --green: #4caf6e; --red: #d94f4f;
+    --green: #4caf6e; --red: #c0392b;
     --white: #e8edf5; --yellow: #f0c040;
     --mage: #68ccef; --text: #c8d0dc; --text-dim: #5a6478;
     --cast-bar: #c8600a; --cast-bar2: #e87830;
@@ -150,8 +150,8 @@
   }
   .enemy-frame.arena-target { box-shadow: 0 0 0 2px #e8edf5; }
   .enemy-frame.arena-focus  { box-shadow: 0 0 0 2px #f0c040; }
-  .enemy-frame.ev-target  { border-color:var(--white); }
-  .enemy-frame.ev-focus   { border-color:var(--yellow); }
+  .enemy-frame.ev-target  { }
+  .enemy-frame.ev-focus   { }
   .enemy-frame.ok-kick    { border-color:var(--green); }
   .enemy-frame.ok-target  { border-color:var(--white); }
   .enemy-frame.ok-focus   { border-color:var(--yellow); }
@@ -159,40 +159,41 @@
 
   .frame-top { display:flex; align-items:center; gap:6px; margin-bottom:4px; }
   .class-icon {
-    width:32px; height:32px; border-radius:2px;
+    width:36px; height:36px; border-radius:4px;
     border:1px solid rgba(104,204,239,0.5);
     background:linear-gradient(135deg,#0a1e30,#142840);
     display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; position:relative;
     overflow:hidden;
   }
-  .class-icon::after { content:''; position:absolute; inset:0; border-radius:2px; box-shadow:inset 0 0 6px rgba(104,204,239,0.15); }
+  .class-icon::after { content:''; position:absolute; inset:0; border-radius:4px; box-shadow:inset 0 0 6px rgba(104,204,239,0.15); }
   .frame-info { flex:1; min-width:0; }
-  .enemy-name { font-size:0.78rem; font-weight:600; color:var(--mage); letter-spacing:0.03em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .hp-bar-wrap { margin-top:3px; height:10px; background:#0a0e14; border-radius:1px; overflow:hidden; border:1px solid rgba(0,0,0,0.4); }
+  .enemy-name { font-size:0.75rem; font-weight:600; color:var(--mage); letter-spacing:0.03em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:2px; }
+  .hp-bar-wrap { height:9px; background:#0a0e14; border-radius:1px; overflow:hidden; border:1px solid rgba(0,0,0,0.4); }
   .hp-bar-fill { height:100%; width:100%; background:linear-gradient(90deg,var(--hp-bar),var(--hp-bar2)); border-radius:1px; }
-  .mana-bar-wrap { margin-top:2px; height:5px; background:#0a0e14; border-radius:1px; overflow:hidden; border:1px solid rgba(0,0,0,0.4); }
-  .mana-bar-fill { height:100%; width:85%; background:linear-gradient(90deg,var(--mana-bar),var(--mana-bar2)); border-radius:1px; }
-  .bind-indicator { width:32px; height:32px; background:var(--bg2); border:1px solid var(--border); border-radius:2px; display:flex; align-items:center; justify-content:center; font-size:0.6rem; font-weight:600; color:var(--text-dim); flex-shrink:0; letter-spacing:0.01em; text-align:center; line-height:1.2; }
+  .mana-bar-wrap { margin-top:2px; height:6px; background:#0a0e14; border-radius:1px; overflow:hidden; border:1px solid rgba(0,0,0,0.4); }
+  .mana-bar-fill { height:100%; width:100%; background:linear-gradient(90deg,var(--mana-bar),var(--mana-bar2)); border-radius:1px; }
+  .bind-indicator { width:24px; height:24px; background:var(--bg2); border:1px solid var(--border); border-radius:3px; display:flex; align-items:center; justify-content:center; flex-shrink:0; overflow:hidden; opacity:0.6; align-self:center; }
 
-  .cast-bar-wrap { height:16px; background:#0a0e14; border-radius:2px; overflow:hidden; border:1px solid rgba(0,0,0,0.6); position:relative; margin-top:4px; }
+  .event-area { position:relative; height:16px; margin-top:3px; }
+  .cast-bar-wrap { position:absolute; inset:0; background:#0a0e14; border-radius:2px; overflow:hidden; border:1px solid rgba(0,0,0,0.6); visibility:hidden; }
   .cast-bar-fill { height:100%; width:0%; background:linear-gradient(90deg,var(--cast-bar),var(--cast-bar2)); border-radius:2px; position:relative; }
   .cast-bar-fill::after { content:''; position:absolute; right:0; top:0; bottom:0; width:3px; background:rgba(255,200,100,0.8); filter:blur(2px); }
   .cast-bar-label { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:0.65rem; font-weight:600; color:rgba(255,255,255,0.85); letter-spacing:0.08em; text-shadow:0 1px 2px rgba(0,0,0,0.8); pointer-events:none; }
 
-  .countdown-wrap { display:none; margin-top:4px; align-items:center; gap:10px; height:32px; padding:0 4px; }
-  .countdown-wrap.visible { display:flex; }
+  .countdown-wrap { position:absolute; inset:0; visibility:hidden; display:flex; align-items:center; gap:6px; padding:0 4px; }
+  .countdown-wrap.visible { visibility:visible; }
   .countdown-svg { flex-shrink:0; }
-  .countdown-label { font-size:0.72rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; }
+  .countdown-label { font-size:0.6rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; }
   .countdown-label.type-target { color:var(--white); }
   .countdown-label.type-focus  { color:var(--yellow); }
 
-  .feedback { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-family:'Cinzel',serif; font-size:0.88rem; font-weight:700; letter-spacing:0.1em; opacity:0; pointer-events:none; border-radius:3px; transition:opacity 0.1s; text-shadow:0 1px 4px rgba(0,0,0,0.8); }
+  .feedback { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-family:'Exo 2',sans-serif; font-size:0.65rem; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; opacity:0; pointer-events:none; border-radius:2px; transition:opacity 0.1s; text-shadow:0 1px 3px rgba(0,0,0,0.9); }
   .feedback.show { opacity:1; }
   .feedback.kicked-fb   { background:rgba(76,175,110,0.15);  color:var(--green); }
   .feedback.targeted-fb { background:rgba(232,237,245,0.1);  color:var(--white); }
   .feedback.focused-fb  { background:rgba(240,192,64,0.12);  color:var(--yellow); }
-  .feedback.miss-fb     { background:rgba(217,79,79,0.15);   color:var(--red); }
-  .feedback.wrong-fb    { background:rgba(217,79,79,0.15);   color:var(--red); }
+  .feedback.miss-fb     { background:rgba(192,57,43,0.2);   color:var(--red); }
+  .feedback.wrong-fb    { background:rgba(192,57,43,0.2);   color:var(--red); }
 
   .center-area { position:absolute; left:0; right:0; top:0; bottom:0; z-index:1; display:flex; align-items:center; justify-content:center; text-align:center; }
   .spell-display { opacity:0; transition:opacity 0.3s; }
@@ -201,7 +202,7 @@
   .spell-name { font-family:'Cinzel',serif; font-size:0.9rem; color:var(--gold); letter-spacing:0.1em; }
   .casting-who { font-size:0.75rem; color:var(--text-dim); margin-top:4px; letter-spacing:0.05em; }
 
-  .center-result { position:fixed; left:0; right:0; top:50%; transform:translateY(0px); text-align:center; font-family:'Cinzel',serif; font-size:1.6rem; font-weight:700; letter-spacing:0.12em; opacity:0; transition:opacity 0.15s,transform 0.15s; pointer-events:none; text-shadow:0 2px 16px rgba(0,0,0,0.8); }
+  .center-result { position:fixed; left:0; right:0; top:50%; transform:translateY(0px); text-align:center; font-family:'Cinzel',serif; font-size:2.4rem; font-weight:700; letter-spacing:0.12em; opacity:0; transition:opacity 0.15s,transform 0.15s; pointer-events:none; text-shadow:0 2px 16px rgba(0,0,0,0.8); }
   .center-result.show { opacity:1; transform:translateY(-8px); }
   .center-result.res-success { color:var(--green); }
   .center-result.res-miss    { color:var(--red); }
@@ -300,7 +301,7 @@ const CAST_DURATION  = 1500;
 const EVENT_DURATION = 1500;
 const POST_DELAY     = 1000;
 const FB_DURATION    = 600;
-const R              = 12;
+const R              = 7;
 const CIRCUM         = 2 * Math.PI * R; // ~75.398
 
 // ── BIND FORMAT ──
@@ -476,15 +477,18 @@ function buildFrames() {
           <div class="hp-bar-wrap"><div class="hp-bar-fill"></div></div>
           <div class="mana-bar-wrap"><div class="mana-bar-fill"></div></div>
         </div>
-        <div class="bind-indicator" id="bind-ind-${i}">${formatBind(state.binds[i])}</div>
+        <div class="bind-indicator" id="bind-ind-${i}"><img src="https://wow.zamimg.com/images/wow/icons/medium/inv_bannerpvp_02.jpg" style="width:100%;height:100%;object-fit:cover;border-radius:2px;opacity:0.7;"></div>
       </div>
-      <div class="cast-bar-wrap" id="castbar-wrap-${i}" style="display:none;">
-        <div class="cast-bar-fill" id="castbar-${i}"></div>
-        <div class="cast-bar-label">Polymorph</div>
-      </div>
-      <div class="countdown-wrap" id="cd-wrap-${i}">
-        <svg id="cd-svg-${i}" width="28" height="28" viewBox="0 0 28 28" style="transform:rotate(-90deg);flex-shrink:0;"></svg>
-        <span class="countdown-label" id="cd-label-${i}"></span>
+      <div class="event-area" id="event-area-${i}">
+        <div class="cast-bar-wrap" id="castbar-wrap-${i}">
+          <div class="cast-bar-fill" id="castbar-${i}"></div>
+          <div class="cast-bar-label">Polymorph</div>
+        </div>
+        <div class="countdown-wrap" id="cd-wrap-${i}">
+          <svg id="cd-svg-${i}" width="18" height="18" viewBox="0 0 18 18" style="transform:rotate(-90deg);flex-shrink:0;"></svg>
+          <span class="countdown-label" id="cd-label-${i}"></span>
+        </div>
+        <div class="feedback" id="feedback-${i}"></div>
       </div>
       <div class="feedback" id="feedback-${i}"></div>
     `;
@@ -493,13 +497,13 @@ function buildFrames() {
     // Build SVG circles via JS to avoid CSS/attr conflicts
     const svg = document.getElementById('cd-svg-' + i);
     const bg = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    bg.setAttribute('cx', '14'); bg.setAttribute('cy', '14'); bg.setAttribute('r', String(R));
+    bg.setAttribute('cx', '9'); bg.setAttribute('cy', '9'); bg.setAttribute('r', String(R));
     bg.setAttribute('fill', 'none'); bg.setAttribute('stroke', '#1a2030'); bg.setAttribute('stroke-width', '3');
     svg.appendChild(bg);
 
     const ring = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
     ring.id = 'cd-ring-' + i;
-    ring.setAttribute('cx', '14'); ring.setAttribute('cy', '14'); ring.setAttribute('r', String(R));
+    ring.setAttribute('cx', '9'); ring.setAttribute('cy', '9'); ring.setAttribute('r', String(R));
     ring.setAttribute('fill', 'none'); ring.setAttribute('stroke-width', '3');
     ring.setAttribute('stroke-linecap', 'round');
     ring.setAttribute('stroke-dasharray', String(CIRCUM));
@@ -645,7 +649,7 @@ function startEvent() {
     const wrap = document.getElementById('castbar-wrap-' + idx);
     const bar  = document.getElementById('castbar-' + idx);
     frame.classList.add('casting');
-    wrap.style.display = 'block';
+    wrap.style.visibility = 'visible';
     bar.style.transition = 'none';
     bar.style.width = '0%';
     setCenterDisplay('🐑', 'POLYMORPH', `Enemy ${idx+1} is casting...`);
@@ -735,17 +739,44 @@ function success(idx, type) {
   cancelAnimationFrame(state.countdownRAF);
   state.activeEvent = null;
   hideCenterDisplay();
-  clearCastBar(idx);
+  if (type !== 'kick') clearCastBar(idx);
   clearCountdown(idx);
   const frame = document.getElementById('frame-' + idx);
   const arenaClasses = [];
   if (state.arenaTarget === idx) arenaClasses.push('arena-target');
   if (state.arenaFocus  === idx) arenaClasses.push('arena-focus');
   frame.className = `enemy-frame ok-${type}`;
-  const fbClass = type === 'kick' ? 'kicked-fb' : type === 'target' ? 'targeted-fb' : 'focused-fb';
-  const fbText  = type === 'kick' ? '✓ KICKED!' : type === 'target' ? '✓ TARGETED!' : '✓ FOCUSED!';
-  showFeedback(idx, fbClass, fbText);
-  showCenterResult('res-success', fbText);
+  if (type === 'kick') {
+    // Flash the cast bar green instead of overlay feedback
+    const bar  = document.getElementById('castbar-' + idx);
+    const wrap = document.getElementById('castbar-wrap-' + idx);
+    if (bar && wrap) {
+      bar.style.transition = 'none';
+      bar.style.width = '100%';
+      bar.style.background = 'linear-gradient(90deg,#3a9e5f,#5ccc80)';
+      bar.style.boxShadow = '0 0 8px rgba(76,175,110,0.6)';
+      wrap.style.visibility = 'visible';
+      wrap.style.opacity = '1';
+      setTimeout(() => {
+        wrap.style.transition = 'opacity 0.35s';
+        wrap.style.opacity = '0';
+        setTimeout(() => {
+          wrap.style.visibility = 'hidden';
+          wrap.style.transition = '';
+          wrap.style.opacity = '';
+          bar.style.background = '';
+          bar.style.boxShadow = '';
+          bar.style.transition = 'none';
+          bar.style.width = '0%';
+        }, 360);
+      }, 200);
+    }
+  } else {
+    const fbClass = type === 'target' ? 'targeted-fb' : 'focused-fb';
+    const fbText  = type === 'target' ? '✓ TARGETED!' : '✓ FOCUSED!';
+    showFeedback(idx, fbClass, fbText);
+  }
+  showCenterResult('res-success', '✓');
   setTimeout(() => {
     frame.className = 'enemy-frame ' + arenaClasses.join(' ');
     scheduleNext(POST_DELAY);
@@ -756,15 +787,41 @@ function miss(idx, type) {
   cancelAnimationFrame(state.countdownRAF);
   state.activeEvent = null;
   hideCenterDisplay();
-  clearCastBar(idx);
   clearCountdown(idx);
   const frame = document.getElementById('frame-' + idx);
   const arenaClasses = [];
   if (state.arenaTarget === idx) arenaClasses.push('arena-target');
   if (state.arenaFocus  === idx) arenaClasses.push('arena-focus');
   frame.className = 'enemy-frame fail';
-  showFeedback(idx, 'miss-fb', '✗ MISS');
-  showCenterResult('res-miss', '✗ MISS');
+  if (type === 'kick') {
+    const bar  = document.getElementById('castbar-' + idx);
+    const wrap = document.getElementById('castbar-wrap-' + idx);
+    if (bar && wrap) {
+      bar.style.transition = 'none';
+      bar.style.width = '100%';
+      bar.style.background = 'linear-gradient(90deg,#8b2020,#c0392b)';
+      bar.style.boxShadow = '0 0 8px rgba(217,79,79,0.6)';
+      wrap.style.visibility = 'visible';
+      wrap.style.opacity = '1';
+      setTimeout(() => {
+        wrap.style.transition = 'opacity 0.35s';
+        wrap.style.opacity = '0';
+        setTimeout(() => {
+          wrap.style.visibility = 'hidden';
+          wrap.style.transition = '';
+          wrap.style.opacity = '';
+          bar.style.background = '';
+          bar.style.boxShadow = '';
+          bar.style.transition = 'none';
+          bar.style.width = '0%';
+        }, 360);
+      }, 200);
+    }
+  } else {
+    clearCastBar(idx);
+    showFeedback(idx, 'miss-fb', '✗ MISS');
+  }
+  showCenterResult('res-miss', '✗');
   setTimeout(() => {
     frame.className = 'enemy-frame ' + arenaClasses.join(' ');
     scheduleNext(POST_DELAY);
@@ -774,9 +831,8 @@ function miss(idx, type) {
 function wrong(idx) {
   const frame = document.getElementById('frame-' + idx);
   frame.classList.add('fail');
-  showFeedback(idx, 'wrong-fb', '✗ WRONG');
-  showCenterResult('res-wrong', '✗ WRONG');
-  setTimeout(() => { frame.classList.remove('fail'); clearFeedback(idx); }, FB_DURATION);
+  showCenterResult('res-wrong', '✗');
+  setTimeout(() => { frame.classList.remove('fail'); }, FB_DURATION);
 }
 
 function clearCastBar(idx) {
@@ -784,7 +840,7 @@ function clearCastBar(idx) {
   const wrap = document.getElementById('castbar-wrap-' + idx);
   if (!bar) return;
   bar.style.transition = 'none'; bar.style.width = '0%';
-  setTimeout(() => { if (wrap) wrap.style.display = 'none'; }, 150);
+  if (wrap) wrap.style.visibility = 'hidden';
 }
 
 function clearCountdown(idx) {
@@ -814,15 +870,20 @@ function showCenterResult(cls, text) {
 }
 
 function showFeedback(idx, cls, text) {
-  clearFeedback(idx);
+  clearTimeout(state.fbTimers[idx]);
   const el = document.getElementById('feedback-' + idx);
+  el.style.transition = '';
+  el.style.opacity = '';
   el.className = `feedback show ${cls}`; el.textContent = text;
   state.fbTimers[idx] = setTimeout(() => clearFeedback(idx), FB_DURATION + 200);
 }
 function clearFeedback(idx) {
   clearTimeout(state.fbTimers[idx]);
   const el = document.getElementById('feedback-' + idx);
-  if (el) el.className = 'feedback';
+  if (!el) return;
+  el.style.transition = 'none';
+  el.style.opacity = '0';
+  setTimeout(() => { el.className = 'feedback'; el.style.transition = ''; el.style.opacity = ''; }, 50);
 }
 
 // ── PAUSE ──
@@ -865,7 +926,7 @@ function resumeCastBar() {
   if (!bar) return;
   const w = parseFloat(bar.style.width) || 0;
   const remaining = CAST_DURATION * (1 - w / 100);
-  wrap.style.display = 'block';
+  wrap.style.visibility = 'visible';
   requestAnimationFrame(() => { bar.style.transition = `width ${remaining}ms linear`; bar.style.width = '100%'; });
   state.eventTimer = setTimeout(() => {
     if (state.activeEvent?.type === 'kick' && state.activeEvent.idx === idx) miss(idx, 'kick');
